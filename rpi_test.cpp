@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <string>
+#include <iostream>
+#include <pigpio.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/i2c-dev.h>
+#include <memory.h>
+#define DESTINATION_ADDR 0x13
+#define SLAVE_ADDR 0x13
+
+int init_slave(bsc_xfer_t &xfer, int addr) {
+
+	gpioSetMode(18, PI_ALT3);
+	gpioSetMode(19, PI_ALT3);
+	xfer.control = (addr<<16) | 0x305;
+
+	return bscXfer(&xfer);
+} 
+
+
+int close_slave(bsc_xfer_t &xfer) {
+
+	xfer.control = 0;	
+	return bscXfer(&xfer);
+}
+
+
+int main(int argc, char *argv[]) {
+
+	int key = 0;
+	int handle;
+	int status;
+	int length = 12; //11 chars + \0
+	char message[] = "Hello World";
+
+	if (gpioInitialise() < 0) {printf("Error 1\n"); return 1;}
+
+	// Master sends one "Hello World" message to slave
+	// It would be good ideia to test sending multiple messages sequentially
+
+	while(key != 'q') {
+		
+		handle = i2cOpen(1, DESTINATION_ADDR, 0); 
+		//std::cout << "Handle: " << handle << std::endl;
+		i2cWriteDevice(handle, message, length); 
+		gpioDelay(20000);
+		i2cClose(handle);
+		
+		gpioDelay(20000);
+
+		//SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
+		bsc_xfer_t xfer; //http://abyz.me.uk/rpi/pigpio/cif.html#bscXfer
+		status = init_slave(xfer, SLAVE_ADDR);
+		
+		//strcpy(xfer.rxBuf, "ABCD");
+		std::cout << "rxBuf = " << xfer.rxBuf << std::endl;
+		//xfer.txCnt = 4;
+
+		xfer.txCnt = 0;
+		status = bscXfer(&xfer);
+
+		if(status < 0) {printf("Error 2\n"); return 2;}
+		
+		printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
+
+		for(int j=0;j < xfer.rxCnt;j++) // Print bytes received in rxBuf
+			printf("%c",xfer.rxBuf[j]);
+
+		status = close_slave(xfer);	 // Close slave
+
+		printf("Press q to quit. Press any other key to send a hello message.\n");
+		key = getchar();
+	}
+
+	gpioTerminate();
+	return 0;
+
+	
+
+}
+
+
+
+
