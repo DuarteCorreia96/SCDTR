@@ -71,8 +71,8 @@ int main(){
 
     bsc_xfer_t xfer;
     gpioInitialise();
-    gpioSetPullUpDown(17, PI_PUD_UP);
-    gpioSetPullUpDown(17, PI_PUD_UP);
+    gpioSetPullUpDown(18, PI_PUD_UP);
+    gpioSetPullUpDown(19, PI_PUD_UP);
 
     gpioSetMode(18, PI_ALT3);
     gpioSetMode(19, PI_ALT3);
@@ -83,6 +83,7 @@ int main(){
 
         int status = bscXfer(&xfer);
         if (xfer.rxCnt > 0){
+
             printf("Received %d bytes\n", xfer.rxCnt);
             printf("%.*s\n", xfer.rxCnt, xfer.rxBuf);
 
