@@ -51,13 +51,13 @@ void slave_gpio(){
     printf("Received %d bytes\n", xfer.txCnt); // 1 char = 1 byte
 
     //strcpy(xfer.rxBuf, "ABCD");
-    char read_var[50];
+/*     char read_var[50];
     sprintf(read_var, "%s", xfer.rxBuf);
-    std::cout << "rxBuf = " << read_var << std::endl;
+    std::cout << "rxBuf = " << read_var << std::endl; */
     //xfer.txCnt = 4;
 
-    for (int j = 0; j < strlen(read_var); j++) // Print bytes received in rxBuf
-        printf("%c", read_var[j]);
+    for (int j = 0; j < 11; j++) // Print bytes received in rxBuf
+        printf("%c", xfer.rxBuf[j]);
 
     status = close_slave(xfer); // Close slave
 }
