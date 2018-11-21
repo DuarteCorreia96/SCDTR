@@ -49,8 +49,8 @@ void slave_gpio(){
     printf("Received %d bytes\n", xfer.txCnt); // 1 char = 1 byte
 
     //strcpy(xfer.rxBuf, "ABCD");
-    char read_var[xfer.rxCnt];
-    read_var = xfer.rxBuf;
+    char read_var[50];
+    sprintf(read_var, "%s", xfer.rxBuf);
     std::cout << "rxBuf = " << read_var << std::endl; 
     //xfer.txCnt = 4;
 
