@@ -41,8 +41,11 @@ int main(int argc, char *argv[]){
 	// Enable pull-ups
 	gpioSetPullUpDown(SDA,PI_PUD_UP);
 	gpioSetPullUpDown(SCL,PI_PUD_UP);
-	
-	// Callback function: run when message is sent from Arduino to RPI
+
+    gpioSetPullUpDown(2, PI_PUD_UP);
+    gpioSetPullUpDown(3, PI_PUD_UP);
+
+    // Callback function: run when message is sent from Arduino to RPI
 	eventSetFunc(PI_EVENT_BSC,I2C_Comm);
 
     while(char key = getchar() != 'q'){
