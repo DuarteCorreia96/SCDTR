@@ -44,7 +44,7 @@ void slave_gpio(bsc_xfer_t xfer){
     int status = init_slave(xfer, SLAVE_ADDR);
 
     //strcpy(xfer.rxBuf, "ABCD");
-    char read_var = xfer.rxBuf;
+    char read_var[20] = xfer.rxBuf;
     std::cout << "rxBuf = " << read_var << std::endl;
     //xfer.txCnt = 4;
 
