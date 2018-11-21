@@ -94,7 +94,7 @@ check_gpio()
 
 usage
 
-v=$(pigs hwver)
+v=10494082
 
 if [[ $v < 0 ]]
 then
