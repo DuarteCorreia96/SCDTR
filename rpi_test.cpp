@@ -34,8 +34,6 @@ void master_gpio(){
     i2cWriteDevice(handle, message, 12);
     gpioDelay(20000);
     i2cClose(handle);
-
-    gpioDelay(20000);
 }
 
 void slave_gpio(){
@@ -51,12 +49,11 @@ void slave_gpio(){
     printf("Received %d bytes\n", xfer.txCnt); // 1 char = 1 byte
 
     //strcpy(xfer.rxBuf, "ABCD");
-    char read_var[50];
-    sprintf(read_var, "%s", xfer.rxBuf);
+    char read_var[xfer.rxCnt] = xfer.rxBuf;
     std::cout << "rxBuf = " << read_var << std::endl; 
     //xfer.txCnt = 4;
 
-    for (int j = 0; j < 12; j++) // Print bytes received in rxBuf
+    for (int j = 0; j < xfer.rxCnt; j++) // Print bytes received in rxBuf
         printf("%c", xfer.rxBuf[j]);
 
     status = close_slave(xfer); // Close slave
@@ -66,9 +63,6 @@ int main(int argc, char *argv[]) {
 
 	int key = 0;
 	if (gpioInitialise() < 0) {printf("Error 1\n"); return 1;}
-
-	// Master sends one "Hello World" message to slave
-	// It would be good ideia to test sending multiple messages sequentially
 
     while(key != 'q') {
 		
