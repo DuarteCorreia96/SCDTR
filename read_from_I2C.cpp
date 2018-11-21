@@ -83,7 +83,7 @@ int main(){
             printf("%.*s\n", xfer.rxCnt, xfer.rxBuf);
 
             // processes data
-            readData(xfer.rxBuf, (int)xfer.rxCnt);
+            memset(xfer.rxBuf, '\0', sizeof(char) * BSC_FIFO_SIZE);
         }
     }
 }
