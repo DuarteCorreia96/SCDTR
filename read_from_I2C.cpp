@@ -5,8 +5,8 @@
 #include <linux/i2c-dev.h>
 #include <memory.h>
 
-#define SDA 18 // Serial Data (GPIO18)
-#define SCL 19 // Serial Clock (GPIO19)
+#define SDA 2 // Serial Data (GPIO18)
+#define SCL 3 // Serial Clock (GPIO19)
 #define RPI_ADDR 0x13 // Slave address
 
 bsc_xfer_t xfer;
@@ -44,6 +44,17 @@ int main(int argc, char *argv[]){
 	
 	// Callback function: run when message is sent from Arduino to RPI
 	eventSetFunc(PI_EVENT_BSC,I2C_Comm);
+
+    while(key = getchar() != 'q'){
+        
+        if (xfer.rxCnt != 0)
+        {
+            printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
+
+            for (int j = 0; j < xfer.rxCnt; j++) // Print bytes received in rxBuf
+                printf("%c", xfer.rxBuf[j]);
+        }
+    }
 		
 	return 0;
 }
