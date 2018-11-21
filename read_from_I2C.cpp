@@ -64,6 +64,7 @@ int main(int argc, char *argv[]){
 
 #include <pigpio.h>
 #include <iostream>
+#include <memory.h>
 using namespace std;
 
 int main(){
