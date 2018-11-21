@@ -70,7 +70,7 @@ int main(){
 
     bsc_xfer_t xfer;
     gpioInitialise();
-    xfer.control = (0x08 << 16) | 0x305; // Set I2C slave Address to 0x0A
+    xfer.control = (0x0A << 16) | 0x305; // Set I2C slave Address to 0x0A
     
     xfer.rxCnt = 0;
     while (getchar() != 'q'){
