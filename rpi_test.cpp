@@ -6,6 +6,7 @@
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 #include <memory.h>
+
 #define DESTINATION_ADDR 0x13
 #define SLAVE_ADDR 0x13
 
@@ -25,49 +26,58 @@ int close_slave(bsc_xfer_t &xfer) {
 	return bscXfer(&xfer);
 }
 
+void master_gpio(){
+
+    char message[] = "Hello World";
+    int handle = i2cOpen(1, DESTINATION_ADDR, 0);
+    //std::cout << "Handle: " << handle << std::endl;
+    i2cWriteDevice(handle, message, sizeof(message));
+    gpioDelay(20000);
+    i2cClose(handle);
+
+    gpioDelay(20000);
+}
+
+void slave_gpio(bsc_xfer_t xfer){
+
+    //SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
+    int status = init_slave(xfer, SLAVE_ADDR);
+
+    //strcpy(xfer.rxBuf, "ABCD");
+    std::cout << "rxBuf = " << xfer.rxBuf << std::endl;
+    //xfer.txCnt = 4;
+
+    xfer.txCnt = 0;
+    status = bscXfer(&xfer);
+
+    if (status < 0)
+    {
+        printf("Error 2\n");
+        return 2;
+    }
+
+    printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
+
+    for (int j = 0; j < xfer.rxCnt; j++) // Print bytes received in rxBuf
+        printf("%c", xfer.rxBuf[j]);
+
+    status = close_slave(xfer); // Close slave
+}
 
 int main(int argc, char *argv[]) {
 
 	int key = 0;
-	int handle;
-	int status;
-	int length = 12; //11 chars + \0
-	char message[] = "Hello World";
-
 	if (gpioInitialise() < 0) {printf("Error 1\n"); return 1;}
 
 	// Master sends one "Hello World" message to slave
 	// It would be good ideia to test sending multiple messages sequentially
 
-	while(key != 'q') {
+    bsc_xfer_t xfer; //http://abyz.me.uk/rpi/pigpio/cif.html#bscXfer
+    while(key != 'q') {
 		
-		handle = i2cOpen(1, DESTINATION_ADDR, 0); 
-		//std::cout << "Handle: " << handle << std::endl;
-		i2cWriteDevice(handle, message, length); 
-		gpioDelay(20000);
-		i2cClose(handle);
-		
-		gpioDelay(20000);
+        master_gpio();
 
-		//SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
-		bsc_xfer_t xfer; //http://abyz.me.uk/rpi/pigpio/cif.html#bscXfer
-		status = init_slave(xfer, SLAVE_ADDR);
-		
-		//strcpy(xfer.rxBuf, "ABCD");
-		std::cout << "rxBuf = " << xfer.rxBuf << std::endl;
-		//xfer.txCnt = 4;
-
-		xfer.txCnt = 0;
-		status = bscXfer(&xfer);
-
-		if(status < 0) {printf("Error 2\n"); return 2;}
-		
-		printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
-
-		for(int j=0;j < xfer.rxCnt;j++) // Print bytes received in rxBuf
-			printf("%c",xfer.rxBuf[j]);
-
-		status = close_slave(xfer);	 // Close slave
+        slave_gpio(xfer);   
 
 		printf("Press q to quit. Press any other key to send a hello message.\n");
 		key = getchar();
@@ -75,9 +85,6 @@ int main(int argc, char *argv[]) {
 
 	gpioTerminate();
 	return 0;
-
-	
-
 }
 
 
