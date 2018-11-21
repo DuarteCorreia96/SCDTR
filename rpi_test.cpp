@@ -50,11 +50,7 @@ void slave_gpio(bsc_xfer_t xfer){
     xfer.txCnt = 0;
     status = bscXfer(&xfer);
 
-    if (status < 0)
-    {
-        printf("Error 2\n");
-        return 2;
-    }
+    if (status < 0){ printf("Error 2\n"); return;}
 
     printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
 
