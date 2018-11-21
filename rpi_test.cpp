@@ -38,7 +38,9 @@ void master_gpio(){
     gpioDelay(20000);
 }
 
-void slave_gpio(bsc_xfer_t xfer){
+void slave_gpio(){
+
+    bsc_xfer_t xfer; //http://abyz.me.uk/rpi/pigpio/cif.html#bscXfer
 
     //SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
     int status = init_slave(xfer, SLAVE_ADDR);
@@ -69,12 +71,11 @@ int main(int argc, char *argv[]) {
 	// Master sends one "Hello World" message to slave
 	// It would be good ideia to test sending multiple messages sequentially
 
-    bsc_xfer_t xfer; //http://abyz.me.uk/rpi/pigpio/cif.html#bscXfer
     while(key != 'q') {
 		
         master_gpio();
 
-        slave_gpio(xfer);   
+        slave_gpio();   
 
 		printf("Press q to quit. Press any other key to send a hello message.\n");
 		key = getchar();
