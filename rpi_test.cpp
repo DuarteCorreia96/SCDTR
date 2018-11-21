@@ -44,18 +44,18 @@ void slave_gpio(bsc_xfer_t xfer){
     int status = init_slave(xfer, SLAVE_ADDR);
 
     //strcpy(xfer.rxBuf, "ABCD");
-    std::cout << "rxBuf = " << xfer.rxBuf << std::endl;
+    char read_var = xfer.rxBuf;
+    std::cout << "rxBuf = " << read_var << std::endl;
     //xfer.txCnt = 4;
 
     xfer.txCnt = 0;
     status = bscXfer(&xfer);
-
     if (status < 0){ printf("Error 2\n"); return;}
 
-    printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
+    printf("Received %d bytes\n", strlen(read_var)); // 1 char = 1 byte
 
-    for (int j = 0; j < xfer.rxCnt; j++) // Print bytes received in rxBuf
-        printf("%c", xfer.rxBuf[j]);
+    for (int j = 0; j < strlen(read_var); j++) // Print bytes received in rxBuf
+        printf("%c", read_var[j]);
 
     status = close_slave(xfer); // Close slave
 }
