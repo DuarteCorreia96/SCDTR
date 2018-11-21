@@ -47,9 +47,9 @@ int main(int argc, char *argv[]){
 
     while(char key = getchar() != 'q'){
 
-        status = bscXfer(&xfer);
+        int status = bscXfer(&xfer);
         if (xfer.rxCnt != 0){
-            
+
             printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
             for (int j = 0; j < xfer.rxCnt; j++) // Print bytes received in rxBuf
                 printf("%c", xfer.rxBuf[j]);
