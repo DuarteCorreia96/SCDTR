@@ -7,7 +7,7 @@
 
 #define SDA 2 // Serial Data (GPIO18)
 #define SCL 3 // Serial Clock (GPIO19)
-#define RPI_ADDR 0x13 // Slave address
+#define RPI_ADDR 0x08 // Slave address
 
 bsc_xfer_t xfer;
 
