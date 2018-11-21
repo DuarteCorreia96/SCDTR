@@ -5,8 +5,8 @@
 #include <linux/i2c-dev.h>
 #include <memory.h>
 
-#define SDA 2 // Serial Data (GPIO18)
-#define SCL 3 // Serial Clock (GPIO19)
+#define SDA 19 // Serial Data (GPIO18)
+#define SCL 18 // Serial Clock (GPIO19)
 #define RPI_ADDR 0x08 // Slave address
 
 bsc_xfer_t xfer;
