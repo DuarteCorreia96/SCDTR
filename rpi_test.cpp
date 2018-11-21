@@ -45,17 +45,17 @@ void slave_gpio(){
     //SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
     int status = init_slave(xfer, SLAVE_ADDR);
 
+    xfer.txCnt = 0;
+    status = bscXfer(&xfer);
+    if (status < 0){printf("Error 2\n");return;}
+
+    printf("Received %d bytes\n", status); // 1 char = 1 byte
+
     //strcpy(xfer.rxBuf, "ABCD");
     char read_var[50];
     sprintf(read_var, "%s", xfer.rxBuf);
     std::cout << "rxBuf = " << read_var << std::endl;
     //xfer.txCnt = 4;
-
-    xfer.txCnt = 0;
-    status = bscXfer(&xfer);
-    if (status < 0){ printf("Error 2\n"); return;}
-
-    printf("Received %d bytes\n", strlen(read_var)); // 1 char = 1 byte
 
     for (int j = 0; j < strlen(read_var); j++) // Print bytes received in rxBuf
         printf("%c", read_var[j]);
@@ -74,7 +74,6 @@ int main(int argc, char *argv[]) {
     while(key != 'q') {
 		
         master_gpio();
-
         slave_gpio();   
 
 		printf("Press q to quit. Press any other key to send a hello message.\n");
