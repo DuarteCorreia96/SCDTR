@@ -22,8 +22,13 @@ CFLAGS = -std=c++11
 LDFLAGS = -lpigpio -lpthread -lrt
 
 OBJS = read_from_I2C.o
+OBJS_T = rpi_test.o
 
 I2C: $(OBJS)
+	@echo -e creating executable... $(GREEN) I2C.exe $(WHITE)
+	@g++ -o I2C.exe $^ $(LDFLAGS)
+
+I2C_teste: $(OBJS_T)
 	@echo -e creating executable... $(GREEN) I2C_teste.exe $(WHITE)
 	@g++ -o I2C_teste.exe $^ $(LDFLAGS)
 
