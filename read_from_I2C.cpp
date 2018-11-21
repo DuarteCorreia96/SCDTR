@@ -71,6 +71,9 @@ int main(){
 
     bsc_xfer_t xfer;
     gpioInitialise();
+    gpioSetPullUpDown(17, PI_PUD_UP);
+    gpioSetPullUpDown(17, PI_PUD_UP);
+    
     gpioSetMode(18, PI_INPUT);
     gpioSetMode(19, PI_INPUT);
     xfer.control = (0x08 << 16) | 0x3FF; // Set I2C slave Address to 0x0A
