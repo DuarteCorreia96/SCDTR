@@ -28,7 +28,7 @@ int close_slave(bsc_xfer_t &xfer) {
 
 void master_gpio(){
 
-    char message[] = "Hello torld";
+    char message[] = "Hello World";
     int handle = i2cOpen(1, DESTINATION_ADDR, 0);
     //std::cout << "Handle: " << handle << std::endl;
     i2cWriteDevice(handle, message, 12);
@@ -43,10 +43,10 @@ void slave_gpio(){
     //SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
     int status = init_slave(xfer, SLAVE_ADDR);
 
-    xfer.txCnt = 12;
+    xfer.txCnt = 0;
     status = bscXfer(&xfer);
     if (status < 0){printf("Error 2\n");return;}
-    printf("Received %d bytes\n", xfer.txCnt); // 1 char = 1 byte
+    printf("Received %d bytes\n", xfer.rxCnt); // 1 char = 1 byte
 
     //strcpy(xfer.rxBuf, "ABCD");
     char read_var[50];
