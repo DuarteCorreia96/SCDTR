@@ -28,7 +28,7 @@ int close_slave(bsc_xfer_t &xfer) {
 
 void master_gpio(){
 
-    char message[] = "Hello World";
+    char message[] = "Hello torld";
     int handle = i2cOpen(1, DESTINATION_ADDR, 0);
     //std::cout << "Handle: " << handle << std::endl;
     i2cWriteDevice(handle, message, 12);
