@@ -45,11 +45,10 @@ void slave_gpio(){
     //SLAVE (DESTINATION_ADDR = SLAVE_ADDR)
     int status = init_slave(xfer, SLAVE_ADDR);
 
-    xfer.txCnt = 0;
     status = bscXfer(&xfer);
     if (status < 0){printf("Error 2\n");return;}
 
-    printf("Received %d bytes\n", status); // 1 char = 1 byte
+    printf("Received %d bytes\n", xfer.txCnt); // 1 char = 1 byte
 
     //strcpy(xfer.rxBuf, "ABCD");
     char read_var[50];
