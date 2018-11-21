@@ -78,9 +78,11 @@ int main(){
     gpioSetMode(19, PI_INPUT);
     xfer.control = (0x08 << 16) | 0x3FF; // Set I2C slave Address to 0x0A
     
+    int pi = pigpio_start();
+    
     while (getchar() != 'q'){
 
-        int status = bscXfer(&xfer);
+        int status = bsc_i2cXfer(&xfer);
         if (xfer.rxCnt > 0){
             printf("Received %d bytes\n", xfer.rxCnt);
             printf("%.*s\n", xfer.rxCnt, xfer.rxBuf);
