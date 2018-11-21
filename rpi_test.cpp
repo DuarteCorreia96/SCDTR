@@ -31,7 +31,7 @@ void master_gpio(){
     char message[] = "Hello World";
     int handle = i2cOpen(1, DESTINATION_ADDR, 0);
     //std::cout << "Handle: " << handle << std::endl;
-    i2cWriteDevice(handle, message, sizeof(message));
+    i2cWriteDevice(handle, message, 12);
     gpioDelay(20000);
     i2cClose(handle);
 
