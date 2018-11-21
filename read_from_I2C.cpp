@@ -81,7 +81,7 @@ int main(){
 
     while (getchar() != 'q'){
 
-        int status = bsc_Xfer(&xfer);
+        int status = bscXfer(&xfer);
         if (xfer.rxCnt > 0){
             printf("Received %d bytes\n", xfer.rxCnt);
             printf("%.*s\n", xfer.rxCnt, xfer.rxBuf);
