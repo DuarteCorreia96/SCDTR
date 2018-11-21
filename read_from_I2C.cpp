@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
 	// Callback function: run when message is sent from Arduino to RPI
 	eventSetFunc(PI_EVENT_BSC,I2C_Comm);
 
-    while(key = getchar() != 'q'){
+    while(char key = getchar() != 'q'){
         
         if (xfer.rxCnt != 0)
         {
