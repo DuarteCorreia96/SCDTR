@@ -71,8 +71,6 @@ int main(){
 
     bsc_xfer_t xfer;
     gpioInitialise();
-    gpioSetPullUpDown(18, PI_PUD_UP);
-    gpioSetPullUpDown(19, PI_PUD_UP);
 
     gpioSetMode(18, PI_ALT3);
     gpioSetMode(19, PI_ALT3);
