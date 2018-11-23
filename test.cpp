@@ -5,6 +5,7 @@
 #include <linux/i2c-dev.h>
 #include <memory.h>
 #define DESTINATION_ADDR 0x48
+#define SLAVE_ADDR 0x48
 
 bsc_xfer_t xfer;
 
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
 	
 	int key = 0;
 	int handle;
-	int status, j, key = 0;
+	int status, j;
 	int length = 12; //11 chars + \0
 	char message[] = "Hello World";
 	if (gpioInitialise() < 0) {printf("Error 1\n"); return 1;}
@@ -72,6 +73,7 @@ int main(int argc, char *argv[]) {
 
 	
 }
+
 	status = close_slave(xfer);
 
 	i2cClose(handle); /* close master */
