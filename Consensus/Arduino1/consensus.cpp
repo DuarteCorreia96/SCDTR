@@ -56,9 +56,11 @@ void Consensus::initConsensus(){
 
 	String str = "L " + floatToString((float)addr) + " "  + floatToString(L);
 
-	int error = msgBroadcast(1,str);
+	int error = msgBroadcast(addr,str);
 	if(error != 0) Serial.println("Data not sent!");   
 	
+	while(consensus_init);
+
 	Serial.println("Innit done.");
 }
 
@@ -91,7 +93,7 @@ float Consensus::consensusAlgorithm(){
 	char d21_str[6];
 	char d22_str[6];
 
-	while(consensus_init);
+	initConsensus();
 
   while (j < N_iter){
 
