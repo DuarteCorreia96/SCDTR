@@ -45,6 +45,7 @@ void readVoltage()
 }
 
 void setup() {
+
   n1.consensus_flag = true;
   Serial.begin(9600); // Increase baudrate!?
   Serial.println("<Arduino 1 is ready>");
@@ -56,6 +57,7 @@ void setup() {
   /*while(Serial.available() <= 0) {};
   int L = (int) Serial.parseInt();*/
 
+  n1.initConsensus();
   float d1 = n1.consensusAlgorithm();
   analogWrite(ledPin,ceil(d1*255/100));
   readVoltage();
