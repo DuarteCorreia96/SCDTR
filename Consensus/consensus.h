@@ -9,7 +9,10 @@
 class Consensus : public Comm_I2C {
 
   private:
-
+		// FLAGS
+		bool consensus_flag;
+    bool consensus_init;
+    
     float L;
     float c;
     float k11; //this has to come from somewhere else... I2C!

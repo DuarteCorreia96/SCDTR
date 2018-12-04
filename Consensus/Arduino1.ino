@@ -100,5 +100,4 @@ void receiveEvent(int howMany){
     n1.msgConsensus(id, src_addr, data_str);
 
   }
-  
 }
