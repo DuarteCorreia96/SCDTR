@@ -15,7 +15,7 @@ class Comm_I2C{
 	
 	public:
 
-		Comm_I2C();
+		Comm_I2C() {};
 		Comm_I2C(int addr);
 		//~Comm_I2C();
 		int getAddr() const;
