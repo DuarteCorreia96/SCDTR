@@ -9,7 +9,6 @@ Consensus::Consensus(int _addr, float _c, float _L, float _k11, float _k12, floa
 	k12 = _k12;
 	rho = _rho;
 	o = 0;
-
 }
 
 int Consensus::msgConsensus(char id, int src_addr, String data_str){
@@ -22,7 +21,7 @@ int Consensus::msgConsensus(char id, int src_addr, String data_str){
 			break;
 
 		case 'L':
-			d_best[src_addr-1] = atof(data_str);
+			d_best[src_addr-1] = atof(data_str.c_str());
 			consensus_init = true;
 			break;
 
@@ -49,10 +48,11 @@ float Consensus::getCost(float d1, float d2){
 
 void Consensus::initConsensus(){
 
-	d_best = {0,0};
+	d_best[0] = 0;
+	d_best[1] = 0;
 	d_best[addr-1] = L;
 
-	String str = "L " + floatToString((float)addr) + " " floatToString(L);
+	String str = "L " + floatToString((float)addr) + " "  + floatToString(L);
 
 	int error = msgBroadcast(1,str);
 	if(error != 0) Serial.println("Data not sent!");   
@@ -63,7 +63,7 @@ void Consensus::checkSolution(float d1_test, float d2_test){
 
 	if(checkFeasibility(d1_test, d2_test)){
 
-		float cost = getCost(d1_test,d2_test,y,d_avg);
+		float cost = getCost(d1_test,d2_test);
 		if (cost < cost_best){
 
 			cost_best = cost;
@@ -85,6 +85,9 @@ float Consensus::consensusAlgorithm(){
 	float d1,d2;
   int j = 0;
 
+	char d21_str[6];
+	char d22_str[6];
+
 	while(consensus_init) {};
 
   while (j < N_iter){
@@ -100,8 +103,8 @@ float Consensus::consensusAlgorithm(){
 	  	token = strtok(NULL," ");
 	  	if(token != NULL)	strcpy(d22_str,token);
 	  	
-	  	d2_out[0] = atof(d22_str);
-	  	d2_out[1] = atof(d21_str);
+	  	d_out[0] = atof(d21_str);
+	  	d_out[1] = atof(d22_str);
 	  	
 			cost_best = 1000000; //large number
 	
@@ -134,27 +137,27 @@ float Consensus::consensusAlgorithm(){
 	    // Solution in the DLB (Dimming lower bound)
 	    d1 = 0;
 	  	d2 = rho_inv*z12;
-			CheckSolution(d1, d2);
+			checkSolution(d1, d2);
 	    
 	    // Solution in the DUB (Dimming Upper Bound)
 	    d1 = 100;
 	    d2 = rho_inv*z12;
-			CheckSolution(d1, d2);
+			checkSolution(d1, d2);
 	    
 	    // Solution in the ILB (Illuminance Lower Bound)
 	    d1 = rho_inv*z11 - k11*(o - L + rho_inv*k11*z11)/d1_m;
 	    d2 = rho_inv*z12 - k12*(o - L + rho_inv*k12*z12)/d1_m;
-	    CheckSolution(d1, d2);
+	    checkSolution(d1, d2);
 	    
 	    // Solution in the ILB & DLB
 			d1 = 0;
 			d2 = rho_inv*z12 - (k12*(o-L) - rho_inv*k12*k12*z12)/d1_n;
-			CheckSolution(d1, d2);
+			checkSolution(d1, d2);
 	    
 	    // Solution in the ILB & DUB
 	    d1 = 100;
 	    d2 = rho_inv*z12 - (k12*(o-L) + 100*k12*k11 - rho_inv*k12*k12*z12)/d1_n;
-	    CheckSolution(d1, d2);
+	    checkSolution(d1, d2);
 		
 			// Average solutions from all nodes
 			d_avg[0] = (d_best[0] + d_out[0])/2;

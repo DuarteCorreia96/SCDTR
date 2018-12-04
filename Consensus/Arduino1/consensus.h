@@ -10,7 +10,6 @@ class Consensus : public Comm_I2C {
 
   private:
 		// FLAGS
-		bool consensus_flag;
     bool consensus_init;
     
     float L;
@@ -22,10 +21,10 @@ class Consensus : public Comm_I2C {
     float d_avg[2];
     float d_best[2];
     float cost_best;
-    //float o; // calculate! lux_read - Kd = o
+    float o; // calculate! lux_read - Kd = o
     bool checkFeasibility(float d11, float d12);
     void checkSolution(float d1_test, float d2_test); 
-    float getCost(float d11, float d12, float* y, float* d1_av);
+    float getCost(float d1, float d2);
     void initConsensus();
 
 
@@ -35,6 +34,7 @@ class Consensus : public Comm_I2C {
     int msgConsensus(char id, int src_addr, String data_str);
     //~Consensus();
     float consensusAlgorithm();
+		bool consensus_flag;
 };
 
 #endif

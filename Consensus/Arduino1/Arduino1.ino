@@ -23,7 +23,7 @@ int k1 = 2;
 int k2 = 1;
 int c = 1;
 
-Consensus n1(c,50,k1,k2);
+Consensus n1(1, c,50,k1,k2);
 
 double illuminance_fun(float v)
 {
@@ -45,7 +45,7 @@ void readVoltage()
 }
 
 void setup() {
-  i2c->consensus_flag = true;
+  n1.consensus_flag = true;
   Serial.begin(9600); // Increase baudrate!?
   Serial.println("<Arduino 1 is ready>");
   Wire.begin(OWN_ADDR); // Initialise as slave

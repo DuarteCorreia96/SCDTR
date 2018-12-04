@@ -15,7 +15,7 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 	Wire.write(" ");
 	Wire.write(addr);
 	Wire.write(" ");
-	Wire.write(data_str);
+	Wire.write(data_str.c_str());
 	
 	return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
 	
@@ -23,9 +23,7 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 
 int Comm_I2C::msgBroadcast(int id, String data_str){
 
-	error = msgSend(id,0,data_str);
-	
-	return error; // Returns 0 if the msg was sent successfully	
+	return msgSend(id,0,data_str);; // Returns 0 if the msg was sent successfully	
 }
 
 
@@ -42,7 +40,7 @@ int Comm_I2C::getAddr() const{
 String Comm_I2C::floatToString(float num){
 
 	char* str;
-	dtostrf(str,5,2,num);
+	dtostrf(num,5,2,str);
 	String str2(str);
 
 	return str2;
