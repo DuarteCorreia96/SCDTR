@@ -2,8 +2,8 @@
 #include "consensus.h"
 
 #define BROADCAST_ADDR 0
-#define OWN_ADDR 1
-#define SLAVE_ADDR 2
+#define OWN_ADDR 2
+#define SLAVE_ADDR 1
 
 const int ledPin = 11;
 const int sensorPin = A0;
@@ -46,7 +46,7 @@ void readVoltage()
 
 void setup() {
   delay(3000);
-  n1.consensus_flag = true; // One arduino has to be started with this flag to false!
+  n1.consensus_flag = false; // One arduino has to be started with this flag to false!
   n1.consensus_init = true;
   Serial.begin(9600); // Increase baudrate!?
   Serial.println("<Arduino 1 is ready>");
