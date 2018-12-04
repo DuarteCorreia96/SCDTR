@@ -48,6 +48,8 @@ float Consensus::getCost(float d1, float d2){
 
 void Consensus::initConsensus(){
 
+	Serial.println("Innit started.");
+	
 	d_best[0] = 0;
 	d_best[1] = 0;
 	d_best[addr-1] = L;
@@ -57,6 +59,7 @@ void Consensus::initConsensus(){
 	int error = msgBroadcast(1,str);
 	if(error != 0) Serial.println("Data not sent!");   
 	
+	Serial.println("Innit done.");
 }
 
 void Consensus::checkSolution(float d1_test, float d2_test){
