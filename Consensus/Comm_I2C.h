@@ -7,7 +7,8 @@
 
 class Comm_I2C{
 
-	protected:		
+	protected:
+			
 		int addr;
 		String consensus_data;
 		String floatToString(float num);
