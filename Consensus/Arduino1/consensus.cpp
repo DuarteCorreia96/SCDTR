@@ -91,7 +91,7 @@ float Consensus::consensusAlgorithm(){
 	char d21_str[6];
 	char d22_str[6];
 
-	while(consensus_init) {};
+	while(consensus_init);
 
   while (j < N_iter){
 
