@@ -45,8 +45,7 @@ void readVoltage()
 }
 
 void setup() {
-
-  n1.consensus_flag = true;
+  n1.consensus_flag = false;
   Serial.begin(9600); // Increase baudrate!?
   Serial.println("<Arduino 1 is ready>");
   Wire.begin(OWN_ADDR); // Initialise as slave
@@ -54,8 +53,8 @@ void setup() {
 
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
-  /*while(Serial.available() <= 0) {};
-  int L = (int) Serial.parseInt();*/
+  while(Serial.available() <= 0) {};
+  int L = (int) Serial.parseInt();
 
   float d1 = n1.consensusAlgorithm();
   analogWrite(ledPin,ceil(d1*255/100));
@@ -97,7 +96,7 @@ void receiveEvent(int howMany){
       data_str += c;
     }
 
-    Serial.println("Got to msg Analyse!");
+    //Serial.println("Got to msg Analyse!");
     n1.msgConsensus(id, src_addr, data_str);
 
   }

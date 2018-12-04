@@ -15,7 +15,7 @@ int Consensus::msgConsensus(char id, int src_addr, String data_str){
 
 	switch (id){
 		case 1:
-			Serial.println("Consensus Flag -> T");
+			//Serial.println("Consensus Flag -> T");
 			consensus_flag = true;
 			consensus_data = data_str;
 			break;
