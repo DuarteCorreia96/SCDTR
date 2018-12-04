@@ -1,5 +1,3 @@
-//#include <Wire.h>
-//#include <string.h>
 #include "Comm_I2C.h"
 #include "consensus.h"
 
@@ -24,6 +22,8 @@ float b = 5.0840;
 int k1 = 2;
 int k2 = 1;
 int c = 1;
+
+Consensus n1(c,50,k1,k2);
 
 double illuminance_fun(float v)
 {
@@ -53,9 +53,8 @@ void setup() {
 
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
-  while(Serial.available() <= 0) {};
-  int L = (int) Serial.parseInt();
-  Consensus n1(i2c,c,L,k1,k2);
+  /*while(Serial.available() <= 0) {};
+  int L = (int) Serial.parseInt();*/
 
   float d1 = n1.consensusAlgorithm();
   analogWrite(ledPin,ceil(d1*255/100));
@@ -98,7 +97,7 @@ void receiveEvent(int howMany){
     }
 
     Serial.println("Got to msg Analyse!");
-    i2c->msgAnalyse(id,data_str);
+    n1.msgConsensus(id, src_addr, data_str);
 
   }
   

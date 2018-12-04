@@ -6,23 +6,30 @@
 #include <Arduino.h>
 #include <string.h>
 
-class Consensus
-{
+class Consensus : public Comm_I2C {
+
   private:
-	  Comm_I2C *i2c;
+
     float L;
     float c;
     float k11; //this has to come from somewhere else... I2C!
     float k12;
     float rho;
-    //float o;
+    float y[2];
+    float d_avg[2];
+    float d_best[2];
+    float cost_best;
+    //float o; // calculate! lux_read - Kd = o
     bool checkFeasibility(float d11, float d12);
+    void checkSolution(float d1_test, float d2_test); 
     float getCost(float d11, float d12, float* y, float* d1_av);
-    float* initConsensus(Comm_I2C *i2c);
+    void initConsensus();
+
 
   public:
     Consensus(); //default constructor
-    Consensus(Comm_I2C* _i2c, float _c, float _L, float _k11, float _k12, float _rho = 0.07);
+    Consensus(int _addr, float _c, float _L, float _k11, float _k12, float _rho = 0.07);
+    int msgConsensus(char id, int src_addr, String data_str);
     //~Consensus();
     float consensusAlgorithm();
 };

@@ -5,24 +5,24 @@
 #include <Arduino.h>
 //using namespace std;
 
-class Comm_I2C
-{
-	private:
+class Comm_I2C{
+
+	protected:		
 		int addr;
 		String consensus_data;
+		String floatToString(float num);
 	
 	public:
-		// FLAGS
-		bool consensus_flag;
-		
+
 		Comm_I2C();
 		Comm_I2C(int addr);
 		//~Comm_I2C();
+		int getAddr() const;
+    const char* getConsensusData();
 		void msgAnalyse(int id, String data_str);
-		int msgSend(int id, int src_addr, int dest_addr, char* data_str);
-    const char* Comm_I2C::getConsensusData();
-    int getAddr() const;
-		//int msgBroadcast(int id, int src_addr, String data_str);
+		int msgBroadcast(int id, String data_str);
+		int msgSend(int id, int dest_addr, String data_str);
+
 };
 
 #endif
