@@ -23,7 +23,7 @@ class Consensus : public Comm_I2C {
     bool checkFeasibility(float d11, float d12);
     void checkSolution(float d1_test, float d2_test); 
     float getCost(float d1, float d2);
-    void initConsensus();
+    void initConsensus(float* d_avg);
     float* getCopy();
     void sendCopy(float d1, float d2);
 

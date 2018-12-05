@@ -51,10 +51,15 @@ bool Comm_I2C::calib(){
 
 void Comm_I2C::msgAnalyse(int id, String data_str){
 
-  	if(id == 1){
-			Serial.println("Consensus Flag -> T");
-			consensus_flag = true;
-			consensus_data = data_str;
+  	switch(id){
+      case 1:
+        Serial.println("Consensus Flag -> T");
+        consensus_flag = true;
+        consensus_data = data_str;
+        break;
+
+      default:
+        break;
     }
 
 }

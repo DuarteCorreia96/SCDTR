@@ -2,7 +2,7 @@
 
 Node::Node(){
     
-    d[0] = 0;
+    d[0] = 0; // Duty-cycle set by the local controller
     d[1] = 0;
 };
 

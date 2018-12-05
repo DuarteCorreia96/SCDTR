@@ -5,6 +5,12 @@
 #define OWN_ADDR 1
 #define SLAVE_ADDR 2
 
+// increasing the frequency of PWM signal
+// mask bits that are not prescale
+//fastest possible
+const byte mask = B11111000;
+int prescale = 1;
+
 const int ledPin = 11;
 const int sensorPin = A0;
 
@@ -34,6 +40,7 @@ void setup() {
   Serial.println("<Arduino 1 is ready>");
   Wire.begin(OWN_ADDR); // Initialise as slave
 
+  TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
   //n1.msgSync(); // Wait for the two Arduinos to sync

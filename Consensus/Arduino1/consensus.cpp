@@ -58,7 +58,23 @@ float Consensus::getCost(float d1, float d2){
 }
 
 
-void Consensus::initConsensus(){
+void Consensus::initConsensus(float* d_avg){
+
+	msgSync();
+
+  float* d_out;
+  
+	if(calib_flag){
+		delay(300);
+		d_out = getCopy();
+	}else{
+		sendCopy(d[0],d[1]);
+	}
+
+	msgSync();
+
+	d_avg[0] = (d[0] + d_out[0])/2;
+	d_avg[1] = (d[1] + d_out[1])/2;
 
 	/*Serial.println("Innit started");
 	
@@ -140,16 +156,15 @@ float Consensus::consensusAlgorithm(){
 	y[0] = 0; // Lagrange Multipliers
 	y[1] = 0;
 
-	o = extIlluminance(); // Update external Illuminance estimate
-
-	//initConsensus();
+	o = extIlluminance(); // Update external illuminance estimate
+	initConsensus(d_out);
 
   while (j < N_iter){
 
   	if(consensus_flag){
 
-	  	consensus_flag = false;
 			d_out = getCopy();
+			consensus_flag = false;
 			cost_best = 1000000; //large number
 	
 	    float z1 = rho*d_avg[0] - c - y[0];
@@ -214,18 +229,12 @@ float Consensus::consensusAlgorithm(){
 			sendCopy(d_best[0],d_best[1]); 	    
 	    j++;
 		}
-		else{
-			sendCopy(d_best[0],d_best[1]); 	  
-		}
   }
 
 	if(max_act){ // Request Illuminance value above LED actuation, power everthing at max
 		d_best[0] = 100;
 		d_best[1] = 100;
 	}
-
-	d[0] = d_best[0];
-	d[1] = d_best[1];
 
 	L_ref = k[0]*d_best[0]; // Value to be sent to the local controller
 }
