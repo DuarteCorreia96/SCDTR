@@ -11,55 +11,40 @@ const int sensorPin = A0;
 const int R1 = 10000;
 const int Vcc = 5;
 
+const float m = -0.72;
+const float b = 5.0840; // LDR (sem fita)
+
 //String id_str = "A1: ";
 
-// LDR (sem fita)
-float m = -0.72;
-float b = 5.0840;
-
-// Random K ... Calibration!
+/* Random K ... Calibration!
 int k1 = 2;
-int k2 = 1;
+int k2 = 1;*/
 int c = 1;
+
 float L = 150.0; // The illuminance has to be set by the user!
+Consensus n1(m,b,OWN_ADDR,c,L);
 
-Consensus n1(OWN_ADDR,c,L,k1,k2); 
-
-double illuminance_fun(float v)
-{
-  float R2 = R1 * (Vcc - v) / v;
-  double illuminance = pow(10, (log10(R2) - b) / m);
-
-  return illuminance;
-}
-
-void readVoltage()
-{
-  float rate = analogRead(sensorPin);
-  float rate_volts = 5 * rate / 1023;
-  Serial.print("v(V) = ");
-  Serial.print(rate_volts, 4);
-
-  Serial.print("\tL(lx) = ");
-  Serial.println(illuminance_fun(rate_volts));
-}
 
 void setup() {
-  delay(3000);
+
   n1.consensus_flag = true; // One arduino has to be started with this flag to false!
-  n1.consensus_init = true;
+  n1.calib_flag = true; // One arduino has to be started with this flag to false!
+  //n1.consensus_init = true;
   Serial.begin(9600); // Increase baudrate!?
   Serial.println("<Arduino 1 is ready>");
   Wire.begin(OWN_ADDR); // Initialise as slave
 
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
-  n1.msgSync(); // Wait for the two Arduinos to sync
+  //n1.msgSync(); // Wait for the two Arduinos to sync
+  while(!n1.calib());
+  Serial.println("Calibration complete");
+  //n1.msgSync(); // Wait for the two Arduinos to sync
   Wire.onReceive(receiveEvent);
 
   float d1 = n1.consensusAlgorithm();
-  analogWrite(ledPin,ceil(d1*255/100));
-  readVoltage();
+  /*analogWrite(ledPin,ceil(d1*255/100));
+  readVoltage();*/
 }
 
 void loop() {
@@ -96,7 +81,6 @@ void receiveEvent(int howMany){
       data_str += c;
     }
 
-    n1.msgConsensus(id, src_addr, data_str);
-
+    n1.msgAnalyse(id, data_str);
   }
 }

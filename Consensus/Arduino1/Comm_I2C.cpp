@@ -1,13 +1,61 @@
 #include "Comm_I2C.h"
 
 bool Comm_I2C::sync;
+int Comm_I2C::iter;
 
 Comm_I2C::Comm_I2C(int _addr){
 	addr = _addr;
-  sync = false;
+}
+
+bool Comm_I2C::calib(){
+
+  if (iter > 2) return true;
+
+  if(calib_flag){
+
+    msgSync();
+
+    setPWM(0);
+    o = readIlluminance();
+
+    setPWM(255);
+    float x_max = readIlluminance();
+    k[0] = (x_max - o)/100;
+
+    setPWM(0);
+    msgSync();
+    delay(500);
+
+    float x_max2 = readIlluminance();
+    k[1] = (x_max2 - o)/100;
+
+    calib_flag = !calib_flag;
+    msgSync();
+    ++iter;
+    calib();
+  }
+  else{
+
+    msgSync();
+
+    setPWM(0);
+    msgSync();
+    setPWM(255);
+
+    calib_flag = !calib_flag;
+    msgSync();
+    ++iter;
+    calib();
+  }  
 }
 
 void Comm_I2C::msgAnalyse(int id, String data_str){
+
+  	if(id == 1){
+			Serial.println("Consensus Flag -> T");
+			consensus_flag = true;
+			consensus_data = data_str;
+    }
 
 }
 
@@ -48,17 +96,21 @@ void Comm_I2C::msgSyncCallback(int num){
 }
 
 void Comm_I2C::msgSync(){
+
+  sync = false;
   
   while(!sync){
     Wire.onReceive(msgSyncCallback);
-    delay(1000);
+    delay(200);
     Wire.beginTransmission(BROADCAST_ADDR);
     Wire.write('a');
     Wire.endTransmission();
   }
 
-  Serial.println("Ready!");
-  delay(1000);
+  sync = false;
+
+  Serial.println("Sync!");
+  delay(200);
 }
 
 String Comm_I2C::floatToString(float num){
