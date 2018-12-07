@@ -3,39 +3,26 @@
 
 #include <Wire.h>
 #include <Arduino.h>
-#include "node.h"
-#define BROADCAST_ADDR 0
+//using namespace std;
 
-class Comm_I2C : public Node {
-
-  	private:
-  
-		static void msgSyncCallback(int);
-
-	protected:
-		
+class Comm_I2C
+{
+	private:
 		int addr;
-    static int iter;
 		String consensus_data;
-		String floatToString(float num);
-
+	
 	public:
-
-		Comm_I2C() {};
+		// FLAGS
+		bool consensus_flag;
+		
+		Comm_I2C();
 		Comm_I2C(int addr);
 		//~Comm_I2C();
-    	bool calib();
-		int getAddr() const;
-		const char* getConsensusData();
 		void msgAnalyse(int id, String data_str);
-		int msgBroadcast(int id, String data_str);
-		int msgSend(int id, int dest_addr, String data_str);
-		void msgSync();
-
-		// Flags
-		bool calib_flag;
-    bool consensus_flag;
-    volatile static bool sync;
+		int msgSend(int id, int src_addr, int dest_addr, char* data_str);
+    const char* Comm_I2C::getConsensusData();
+    int getAddr() const;
+		//int msgBroadcast(int id, int src_addr, String data_str);
 };
 
 #endif
