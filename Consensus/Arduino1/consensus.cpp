@@ -13,6 +13,7 @@ Consensus::Consensus(const float _m, const float _b, int _addr, float _c, float 
 	L_ref = 0;
 	d_avg[0] = 0; d_avg[1] = 0;
 	d_best[0] = 0; d_avg[1] = 0;
+  d[0] = 0; d[1] = 0;
 	
 }
 
@@ -39,7 +40,7 @@ int Consensus::msgConsensus(char id, int src_addr, String data_str){
 
 bool Consensus::checkFeasibility(float d1, float d2){
 	
-	if(d1 < 0 || k11*d1 + k12*d2 < L - o){
+	if(d1 < 0 || k[0]*d1 + k[1]*d2 < L - o){
 		max_act = false;
 		return false;
 	}
@@ -64,7 +65,7 @@ void Consensus::initConsensus(float* d_avg){
 
   float* d_out;
   
-	if(calib_flag){
+	if(consensus_flag){
 		delay(300);
 		d_out = getCopy();
 	}else{
@@ -113,9 +114,9 @@ float* Consensus::getCopy(){
 	char d21_str[6];
 	char d22_str[6];
 	
-	Serial.print("Received: ");
-	Serial.println(consensus_data.c_str());
-	char* token = strtok((char*) consensus_data.c_str(), " ");
+	//Serial.print("Received: ");
+	//Serial.println(consensus_data.c_str());
+	char* token = strtok((char*) consensus_data.c_str(), "/");
 	
 	if(token != NULL)	strcpy(d21_str,token);
 	token = strtok(NULL," ");
@@ -124,6 +125,10 @@ float* Consensus::getCopy(){
 	float d_aux[2];	
 	d_aux[0] = atof(d21_str);
 	d_aux[1] = atof(d22_str);
+
+  /*Serial.println(d_aux[0]);
+  Serial.println(d_aux[1]);*/
+  
   float* d_out = d_aux;
   
 	return d_out;
@@ -131,9 +136,8 @@ float* Consensus::getCopy(){
 
 void Consensus::sendCopy(float d1, float d2){
 
-	String str = floatToString(d2) + " " + floatToString(d1);
-	msgSync();
-	msgBroadcast(1,str);	    
+	String str = floatToString(d2) + "/" + floatToString(d1);
+	msgBroadcast(1,str);    
 
 	Serial.print("Sent: ");
 	Serial.println(str.c_str());
@@ -228,6 +232,9 @@ float Consensus::consensusAlgorithm(){
 	    
 			sendCopy(d_best[0],d_best[1]); 	    
 	    j++;
+
+      Serial.println(d_best[0]);
+      Serial.println(d_best[1]);
 		}
   }
 

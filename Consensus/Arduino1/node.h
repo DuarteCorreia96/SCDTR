@@ -24,12 +24,13 @@ class Node{
         float d[2];
 
     public:
-
+        typedef struct NodeInfo NodeInfo;
         Node();
         float readVoltage();
         float readIlluminance();
         bool setPWM(int PWM);
         float extIlluminance();
+        NodeInfo* getNodeInfo();
 };
 
 #endif

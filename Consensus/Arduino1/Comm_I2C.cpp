@@ -1,6 +1,6 @@
 #include "Comm_I2C.h"
 
-bool Comm_I2C::sync;
+volatile bool Comm_I2C::sync;
 int Comm_I2C::iter;
 
 Comm_I2C::Comm_I2C(int _addr){
@@ -9,18 +9,28 @@ Comm_I2C::Comm_I2C(int _addr){
 
 bool Comm_I2C::calib(){
 
+  setPWM(0);
+
   if (iter > 2) return true;
 
   if(calib_flag){
 
     msgSync();
+    delay(500);
 
-    setPWM(0);
+    //setPWM(0);
     o = readIlluminance();
 
+    delay(1000);
+
     setPWM(255);
+    delay(500);
     float x_max = readIlluminance();
     k[0] = (x_max - o)/100;
+
+    Serial.println(k[0]);
+
+    delay(1000);
 
     setPWM(0);
     msgSync();
@@ -29,21 +39,26 @@ bool Comm_I2C::calib(){
     float x_max2 = readIlluminance();
     k[1] = (x_max2 - o)/100;
 
+    Serial.println(k[1]);
+
     calib_flag = !calib_flag;
     msgSync();
+    delay(500);
     ++iter;
     calib();
   }
   else{
 
     msgSync();
+    delay(500);
 
-    setPWM(0);
+    //setPWM(0);
     msgSync();
     setPWM(255);
 
     calib_flag = !calib_flag;
     msgSync();
+    delay(500);
     ++iter;
     calib();
   }  
@@ -68,9 +83,7 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 
 	Wire.beginTransmission(dest_addr);
 	Wire.write(id);
-	Wire.write(" ");
 	Wire.write(addr);
-	Wire.write(" ");
 	Wire.write(data_str.c_str());
 	
 	return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
@@ -79,7 +92,7 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 
 int Comm_I2C::msgBroadcast(int id, String data_str){
 
-	return msgSend(id,BROADCAST_ADDR,data_str);; // Returns 0 if the msg was sent successfully	
+	return msgSend(id,BROADCAST_ADDR,data_str); // Returns 0 if the msg was sent successfully	
 }
 
 
@@ -94,10 +107,13 @@ int Comm_I2C::getAddr() const{
 }
 
 void Comm_I2C::msgSyncCallback(int num){
-  if(Wire.available() > 0){
-      if(Wire.read() == 'a') 
+  /*if(Wire.available() > 0){
+      //char c = Wire.read();      
+      if(Wire.read() == 'a'){
+        //Serial.write(c);
         sync = true;
-  }
+      }        
+  }*/
 }
 
 void Comm_I2C::msgSync(){
@@ -105,8 +121,10 @@ void Comm_I2C::msgSync(){
   sync = false;
   
   while(!sync){
-    Wire.onReceive(msgSyncCallback);
+    //Serial.println(sync);
+    //Wire.onReceive(msgSyncCallback);
     delay(200);
+    //Serial.println(sync);
     Wire.beginTransmission(BROADCAST_ADDR);
     Wire.write('a');
     Wire.endTransmission();
@@ -114,13 +132,13 @@ void Comm_I2C::msgSync(){
 
   sync = false;
 
-  Serial.println("Sync!");
+  //Serial.println("Sync!");
   delay(200);
 }
 
 String Comm_I2C::floatToString(float num){
 
-	char* str;
+	char str[6];
 	dtostrf(num,5,2,str);
 	String str2(str);
 

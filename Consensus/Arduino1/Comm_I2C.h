@@ -11,12 +11,11 @@ class Comm_I2C : public Node {
   	private:
   
 		static void msgSyncCallback(int);
-		static bool sync;
 
 	protected:
 		
 		int addr;
-    	static int iter;
+    static int iter;
 		String consensus_data;
 		String floatToString(float num);
 
@@ -36,6 +35,7 @@ class Comm_I2C : public Node {
 		// Flags
 		bool calib_flag;
     bool consensus_flag;
+    volatile static bool sync;
 };
 
 #endif
