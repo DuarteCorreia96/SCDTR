@@ -13,6 +13,7 @@ Consensus::Consensus(const float _m, const float _b, int _addr, float _c, float 
 	L_ref = 0;
 	d_avg[0] = 0; d_avg[1] = 0;
 	d_best[0] = 0; d_avg[1] = 0;
+  d_out[0] = 0; d_out[1] = 0;
   d[0] = 0; d[1] = 0;
 	
 }
@@ -62,12 +63,10 @@ float Consensus::getCost(float d1, float d2){
 void Consensus::initConsensus(float* d_avg){
 
 	msgSync();
-
-  float* d_out;
   
 	if(consensus_flag){
 		delay(300);
-		d_out = getCopy();
+		getCopy();
 	}else{
 		sendCopy(d[0],d[1]);
 	}
@@ -109,10 +108,10 @@ void Consensus::checkSolution(float d1_test, float d2_test){
 	}
 }
 
-float* Consensus::getCopy(){
+void Consensus::getCopy(){
 
-	char d21_str[6];
-	char d22_str[6];
+	char d21_str[8];
+	char d22_str[8];
 	
 	Serial.print("Received: ");
 	Serial.println(consensus_data.c_str());
@@ -121,7 +120,7 @@ float* Consensus::getCopy(){
 	char* token = strtok((char*)aux_str.c_str(), "/");
 	
 	if(token != NULL)	strcpy(d21_str,token);
-	token = strtok(NULL," ");
+	token = strtok(NULL,"/");
 	if(token != NULL)	strcpy(d22_str,token);
 
 	float d_aux[2];	
@@ -131,9 +130,9 @@ float* Consensus::getCopy(){
   /*Serial.println(d_aux[0]);
   Serial.println(d_aux[1]);*/
   
-  float* d_out = d_aux;
+  d_out[0] = d_aux[0];
+  d_out[1] = d_aux[1];
   
-	return d_out;
 }
 
 void Consensus::sendCopy(float d1, float d2){
@@ -147,9 +146,8 @@ void Consensus::sendCopy(float d1, float d2){
 
 float Consensus::consensusAlgorithm(){
 
-  float* d_out; // Local copy of d from the other node
   float y[2] = {0,0};
-  float d1_m = pow(k[0],2) + pow(k[1],2); // Calibration!!
+  float d1_m = pow(k[0],2) + pow(k[1],2);
   float d1_n = d1_m - pow(k[0],2);
   float rho_inv = 1.0/rho;
   int N_iter = 50;
@@ -167,7 +165,9 @@ float Consensus::consensusAlgorithm(){
 
   	if(consensus_flag){
 
-      d_out = getCopy();
+      Serial.println(j);
+
+      getCopy();
 			consensus_flag = false;
 			cost_best = 1000000; //large number
 	
@@ -175,9 +175,9 @@ float Consensus::consensusAlgorithm(){
 	    float z2 = rho*d_avg[1] - y[1];
 	    
 	    // Unconstrained minimum
-	    d1 = d_best[0] - rho_inv*z1;
-	    d2 = d_best[1] - rho_inv*z2;
-	
+	    d1 = rho_inv*z1;
+	    d2 = rho_inv*z2;
+
 	    if(checkFeasibility(d1,d2)){
 
 	      float cost_unconstrained = getCost(d1,d2);
@@ -192,7 +192,11 @@ float Consensus::consensusAlgorithm(){
   	
   		    y[0] += rho*(d_best[0] - d_avg[0]);
   		    y[1] += rho*(d_best[1] - d_avg[1]); 
-			   
+
+          sendCopy(d_best[0],d_best[1]);      
+          j++;
+
+          delay(200);
   		  	continue; // No need to compute other solution, optimal solution found
 	      }
 		  }
@@ -214,12 +218,12 @@ float Consensus::consensusAlgorithm(){
 	    
 	    // Solution in the ILB & DLB
 			d1 = 0;
-			d2 = rho_inv*z2 - (k[1]*(o - L) - rho_inv*k[1]*k[1]*z2)/d1_n;
+			d2 = rho_inv*z2 - (k[1]*(o - L) + rho_inv*k[1]*k[1]*z2)/d1_n;
 			checkSolution(d1, d2);
 	    
 	    // Solution in the ILB & DUB
 	    d1 = 100;
-	    d2 = rho_inv*z2 - (k[1]*(o - L) + 100*k[1]*k[0] - rho_inv*k[1]*k[1]*z2)/d1_n;
+	    d2 = rho_inv*z2 - (k[1]*(o - L) + 100*k[1]*k[0] + rho_inv*k[1]*k[1]*z2)/d1_n;
 	    checkSolution(d1, d2);
 		
 			// Average solutions from all nodes
@@ -233,11 +237,12 @@ float Consensus::consensusAlgorithm(){
 			sendCopy(d_best[0],d_best[1]); 	    
 	    j++;
 
-      delay(2000);
-
       /*Serial.println(d_best[0]);
       Serial.println(d_best[1]);*/
+
+      delay(200);
 		}
+   
   }
 
 	if(max_act){ // Request Illuminance value above LED actuation, power everthing at max
@@ -246,4 +251,5 @@ float Consensus::consensusAlgorithm(){
 	}
 
 	L_ref = k[0]*d_best[0]; // Value to be sent to the local controller
+  Serial.println(L_ref);
 }

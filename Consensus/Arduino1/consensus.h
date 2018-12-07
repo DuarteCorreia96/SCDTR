@@ -19,12 +19,13 @@ class Consensus : public Comm_I2C {
     float y[2];
     float d_avg[2];
     float d_best[2];
+    float d_out[2];
     float cost_best;
     bool checkFeasibility(float d11, float d12);
     void checkSolution(float d1_test, float d2_test); 
     float getCost(float d1, float d2);
     void initConsensus(float* d_avg);
-    float* getCopy();
+    void getCopy();
     void sendCopy(float d1, float d2);
 
     // FLAGS

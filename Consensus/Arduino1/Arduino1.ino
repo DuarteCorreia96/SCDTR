@@ -46,6 +46,7 @@ void setup() {
   Serial.println("Calibration complete");
   
   float d1 = n1.consensusAlgorithm();
+  
   /*analogWrite(ledPin,ceil(d1*255/100));
   readVoltage();*/
 }
@@ -82,7 +83,7 @@ void receiveEvent(int howMany){
         return;
       }
 
-      id = c;
+      id = c; // not a sync message
       
       /*id = Wire.read();
       Serial.write(id);

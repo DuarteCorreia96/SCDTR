@@ -68,7 +68,7 @@ void Comm_I2C::msgAnalyse(int id, String data_str){
 
   	switch(id){
       case 1:
-        Serial.println("Consensus Flag -> T");
+        //Serial.println("Consensus Flag -> T");
         consensus_flag = true;
         consensus_data = data_str;
         break;
@@ -138,8 +138,8 @@ void Comm_I2C::msgSync(){
 
 String Comm_I2C::floatToString(float num){
 
-	char str[6];
-	dtostrf(num,5,2,str);
+	char str[8];
+	dtostrf(num,7,2,str);
 	String str2(str);
 
 	return str2;
