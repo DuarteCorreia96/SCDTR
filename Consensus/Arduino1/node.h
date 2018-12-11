@@ -2,15 +2,12 @@
 #define _NODE_H
 
 #include <math.h>
-#include <Arduino.h>
 
+using namespace std;
 
 class Node{
 
     private:
-
-        const int ledPin = 11;
-        const int sensorPin = A0;
         const int R1 = 10000;
         const int Vcc = 5;
 
@@ -26,10 +23,6 @@ class Node{
     public:
         typedef struct NodeInfo NodeInfo;
         Node();
-        float readVoltage();
-        float readIlluminance();
-        bool setPWM(int PWM);
-        float extIlluminance();
         NodeInfo* getNodeInfo();
 };
 

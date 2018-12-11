@@ -16,36 +16,6 @@ Node::Node(){
     d[1] = 0;
 };
 
-float Node::readIlluminance(){
-
-    float v = readVoltage();
-    float R2 = R1 * (Vcc - v) / v;
-    float illuminance = pow(10, (log10(R2) - b) / m);
-
-    return illuminance;
-}
-
-float Node::readVoltage(){
-  
-    return 5*analogRead(sensorPin)/1023.0;
-}
-
-bool Node::setPWM(int PWM){
-
-    if(PWM < 0 || PWM > 255) 
-        return false;
-
-    analogWrite(ledPin,PWM);
-    return true;
-}
-
-
-float Node::extIlluminance(){
-
-    o = readIlluminance() - k[0]*d[0] - k[1]*d[1];
-    return o;
-}
-
 NodeInfo* Node::getNodeInfo(){
   
   NodeInfo* n;
