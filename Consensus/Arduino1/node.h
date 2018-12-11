@@ -9,19 +9,19 @@ class Node{
 
     private:
 
-        const int ledPin = 11;
-        const int sensorPin = A0;
-        const int R1 = 10000;
-        const int Vcc = 5;
-
     protected:
-
-        float m;
-        float b;
-        float k[2];
-        float o;
-        float L_ref;
-        float d[2];
+    float L;
+    float m;
+    float b;
+    float k[2];
+    float o;
+    float L_ref;
+    float d[2];
+		const int ledPin = 11;
+		const int sensorPin = A0;
+		const int R1 = 10000;
+		const int Vcc = 5;
+		bool consensusCheck = false;
 
     public:
         typedef struct NodeInfo NodeInfo;
@@ -31,6 +31,7 @@ class Node{
         bool setPWM(int PWM);
         float extIlluminance();
         NodeInfo* getNodeInfo();
+        void setLux(float _L);
 };
 
 #endif

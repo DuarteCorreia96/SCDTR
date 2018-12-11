@@ -61,4 +61,6 @@ NodeInfo* Node::getNodeInfo(){
   return n;
 }
 
-
+void Node::setLux(float _L){
+  L = _L;
+}

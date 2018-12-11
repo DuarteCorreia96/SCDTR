@@ -11,7 +11,6 @@ class Consensus : public Comm_I2C {
 
   private:
     
-    float L;
     float c;
     float k11; //this has to come from somewhere else... I2C!
     float k12;
@@ -27,6 +26,7 @@ class Consensus : public Comm_I2C {
     void initConsensus(float* d_avg);
     void getCopy();
     void sendCopy(float d1, float d2);
+    float Lcon;
 
     // FLAGS
     bool max_act;
@@ -35,8 +35,9 @@ class Consensus : public Comm_I2C {
 
   public:
     Consensus(); //default constructor
-    Consensus(const float _m, const float _b, int _addr, float _c, float _L, float _rho = 0.07);
+    Consensus(const float _m, const float _b, int _addr, float _c, float _rho = 0.07);
     int msgConsensus(char id, int src_addr, String data_str);
+
     //~Consensus();
     float consensusAlgorithm();
 

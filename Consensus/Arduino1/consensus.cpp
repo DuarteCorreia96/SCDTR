@@ -1,21 +1,20 @@
 #include "consensus.h"
 
-Consensus::Consensus(const float _m, const float _b, int _addr, float _c, float _L, float _rho){
+Consensus::Consensus(const float _m, const float _b, int _addr, float _c, float _rho){
 
 	addr = _addr;
-  m = _m;
-  b = _b;
+	m = _m;
+	b = _b;
 	c = _c;
-	L = _L;
+	Lcon = L;
 	rho = _rho;
 	o = 0;
 	iter = 1;
 	L_ref = 0;
 	d_avg[0] = 0; d_avg[1] = 0;
 	d_best[0] = 0; d_avg[1] = 0;
-  d_out[0] = 0; d_out[1] = 0;
-  d[0] = 0; d[1] = 0;
-	
+	d_out[0] = 0; d_out[1] = 0;
+	d[0] = 0; d[1] = 0;	
 }
 
 int Consensus::msgConsensus(char id, int src_addr, String data_str){
@@ -81,8 +80,8 @@ void Consensus::getCopy(){
 	char d21_str[8];
 	char d22_str[8];
 	
-	Serial.print("Received: ");
-	Serial.println(consensus_data.c_str());
+	//Serial.print("Received: ");
+	//Serial.println(consensus_data.c_str());
  
   String aux_str = consensus_data;
 	char* token = strtok((char*)aux_str.c_str(), "/");
@@ -108,8 +107,8 @@ void Consensus::sendCopy(float d1, float d2){
 	String str = floatToString(d2) + "/" + floatToString(d1);
 	msgBroadcast(1,str);    
 
-	Serial.print("Sent: ");
-	Serial.println(str.c_str());
+	//Serial.print("Sent: ");
+	//Serial.println(str.c_str());
 }
 
 void Consensus::initConsensus(float* d_avg){
@@ -127,6 +126,8 @@ void Consensus::initConsensus(float* d_avg){
 
   d_avg[0] = (d[0] + d_out[0])/2;
   d_avg[1] = (d[1] + d_out[1])/2;
+
+  Lcon = L;
 
   /*Serial.println("Innit started");
   
@@ -167,7 +168,7 @@ float Consensus::consensusAlgorithm(){
 
   	if(consensus_flag){
 
-      Serial.println(j);
+      //Serial.println(j);
 
       getCopy();
 			consensus_flag = false;
@@ -214,18 +215,18 @@ float Consensus::consensusAlgorithm(){
 			checkSolution(d1, d2);
 	    
 	    // Solution in the ILB (Illuminance Lower Bound)
-	    d1 = rho_inv*z1 - k[0]*(o - L + rho_inv*(k[0]*z1 + k[1]*z2))/d1_m;
-	    d2 = rho_inv*z2 - k[1]*(o - L + rho_inv*(k[0]*z1 + k[1]*z2))/d1_m;
+	    d1 = rho_inv*z1 - k[0]*(o - Lcon + rho_inv*(k[0]*z1 + k[1]*z2))/d1_m;
+	    d2 = rho_inv*z2 - k[1]*(o - Lcon + rho_inv*(k[0]*z1 + k[1]*z2))/d1_m;
 	    checkSolution(d1, d2);
 	    
 	    // Solution in the ILB & DLB
 			d1 = 0;
-			d2 = rho_inv*z2 - (k[1]*(o - L) + rho_inv*k[1]*k[1]*z2)/d1_n;
+			d2 = rho_inv*z2 - (k[1]*(o - Lcon) + rho_inv*k[1]*k[1]*z2)/d1_n;
 			checkSolution(d1, d2);
 	    
 	    // Solution in the ILB & DUB
 	    d1 = 100;
-	    d2 = rho_inv*z2 - (k[1]*(o - L) + 100*k[1]*k[0] + rho_inv*k[1]*k[1]*z2)/d1_n;
+	    d2 = rho_inv*z2 - (k[1]*(o - Lcon) + 100*k[1]*k[0] + rho_inv*k[1]*k[1]*z2)/d1_n;
 	    checkSolution(d1, d2);
 		
 			// Average solutions from all nodes
@@ -253,5 +254,7 @@ float Consensus::consensusAlgorithm(){
 	}
 
 	L_ref = k[0]*d_best[0]; // Value to be sent to the local controller
-  Serial.println(L_ref);
+	Serial.println(L_ref);
+	consensusCheck = true;
+	Lcon = L;
 }
