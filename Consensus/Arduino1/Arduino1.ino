@@ -28,7 +28,7 @@ Consensus n1(m,b,OWN_ADDR,c,L);
 
 
 void setup() {
-  delay(3000);
+  delay(3000);      
   n1.consensus_flag = true; // One arduino has to be started with this flag to false!
   n1.calib_flag = true; // One arduino has to be started with this flag to false!
   //n1.consensus_init = true;
@@ -40,18 +40,19 @@ void setup() {
   TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
-  /*n1.msgSync(); // Wait for the two Arduinos to sync
-  Serial.println("Here!");*/
+  //n1.msgSync(); // Wait for the two Arduinos to sync
+  //Serial.println("Here!");
   while(!n1.calib());
   Serial.println("Calibration complete");
   
-  float d1 = n1.consensusAlgorithm();
-  
+  float d1 = n1.consensusAlgorithm(); 
   /*analogWrite(ledPin,ceil(d1*255/100));
   readVoltage();*/
 }
 
 void loop() {
+
+  //Serial.println(n1.readIlluminance());
   /*
   Wire.beginTransmission(BROADCAST_ADDR);
   Wire.write("Hello word\n");

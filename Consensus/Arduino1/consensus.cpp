@@ -39,59 +39,27 @@ int Consensus::msgConsensus(char id, int src_addr, String data_str){
 	}*/
 }
 
+
 bool Consensus::checkFeasibility(float d1, float d2){
-	
-	if(d1 < 0 || k[0]*d1 + k[1]*d2 < L - o){
-		max_act = false;
-		return false;
-	}
-		
-	if(d1 > 100){
-		max_act = true;
-		return false;
-	}
+
+	float tol = 0.001;
+  
+  if(d1 < 0 - tol|| k[0]*d1 + k[1]*d2 < L - o - tol){
+    max_act = false;
+    return false;
+  }
+    
+  if(d1 > 100 + tol){
+    max_act = true;
+    return false;
+  }
 
   return true;
 }
 
 float Consensus::getCost(float d1, float d2){
 
-	return c*d1+y[0]*(d1-d_avg[0])+y[1]*(d2-d_avg[1])+rho/2*(pow(d1-d_avg[0],2)+pow(d2-d_avg[1],2));
-}
-
-
-void Consensus::initConsensus(float* d_avg){
-
-	msgSync();
-  
-	if(consensus_flag){
-		delay(300);
-		getCopy();
-	}else{
-		sendCopy(d[0],d[1]);
-	}
-
-	msgSync();
-
-	d_avg[0] = (d[0] + d_out[0])/2;
-	d_avg[1] = (d[1] + d_out[1])/2;
-
-	/*Serial.println("Innit started");
-	
-	d_best[0] = 0;
-	d_best[1] = 0;
-	d_avg = {0,0};
-	d_best[addr-1] = L;
-	y = {0,0};
-
-	String str = "L " + floatToString((float)addr) + " " + floatToString(L);
-
-	int error = msgBroadcast(addr,str);
-	if(error != 0) Serial.println("Data not sent!");   
-	
-	while(consensus_init);
-
-	Serial.println("Innit done");*/
+  return c*d1+y[0]*(d1-d_avg[0])+y[1]*(d2-d_avg[1])+rho/2*(pow(d1-d_avg[0],2)+pow(d2-d_avg[1],2));
 }
 
 void Consensus::checkSolution(float d1_test, float d2_test){
@@ -142,6 +110,40 @@ void Consensus::sendCopy(float d1, float d2){
 
 	Serial.print("Sent: ");
 	Serial.println(str.c_str());
+}
+
+void Consensus::initConsensus(float* d_avg){
+
+  msgSync();
+  
+  if(consensus_flag){
+    delay(300);
+    getCopy();
+  }else{
+    sendCopy(d[0],d[1]);
+  }
+
+  msgSync();
+
+  d_avg[0] = (d[0] + d_out[0])/2;
+  d_avg[1] = (d[1] + d_out[1])/2;
+
+  /*Serial.println("Innit started");
+  
+  d_best[0] = 0;
+  d_best[1] = 0;
+  d_avg = {0,0};
+  d_best[addr-1] = L;
+  y = {0,0};
+
+  String str = "L " + floatToString((float)addr) + " " + floatToString(L);
+
+  int error = msgBroadcast(addr,str);
+  if(error != 0) Serial.println("Data not sent!");   
+  
+  while(consensus_init);
+
+  Serial.println("Innit done");*/
 }
 
 float Consensus::consensusAlgorithm(){
