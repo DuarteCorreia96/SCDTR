@@ -8,7 +8,6 @@ void client::start(tcp::resolver::iterator endpoint_iter){
   start_read_console();
 }
 
-
 void 
 client::start_connect(tcp::resolver::iterator endpoint_iter){
 

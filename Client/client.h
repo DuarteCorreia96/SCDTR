@@ -1,3 +1,6 @@
+#ifndef _CLIENT_CUST_
+#define _CLIENT_CUST_
+
 #include <unistd.h>
 #include <iostream>
 #include <boost/asio.hpp>
@@ -6,9 +9,10 @@
 using boost::asio::ip::tcp;
 
 class client{
+  
   public:
-    client(boost::asio::io_service &io_service):socket_(io_service), input_(io_service, ::dup(STDIN_FILENO)),console_buffer_(100000){}
 
+    client(boost::asio::io_service &io_service):socket_(io_service), input_(io_service, ::dup(STDIN_FILENO)),console_buffer_(100000){}
     void start(tcp::resolver::iterator endpoint_iter);
 
   private:
@@ -28,3 +32,5 @@ class client{
     enum{ max_length = 1024};
     char send_buffer_[max_length];
 };
+
+#endif
