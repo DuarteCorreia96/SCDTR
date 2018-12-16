@@ -1,6 +1,5 @@
 #include "Comm_I2C.h"
-#include "consensus.h"
-#include "led_controller.h"
+#include "node.h"
 
 //#define BROADCAST_ADDR 0
 //#define SLAVE_ADDR 2
@@ -13,6 +12,7 @@
 volatile bool flag2 = false;
 const byte mask = B11111000;
 int prescale = 1;
+int counter = 0;
 
 /*const int ledPin = 11;
   const int sensorPin = A0;
@@ -27,8 +27,7 @@ const float b = 5.0840; // LDR (sem fita)
 int c = 1;
 
 //float L = 150.0; // The illuminance has to be set by the user!
-Consensus n1(m, b, OWN_ADDR, c);
-led_controller ctrl1;
+Node n1(m, b, OWN_ADDR, c);
 
 void setup() {
   delay(3000);
@@ -48,7 +47,8 @@ void setup() {
   while (!n1.calib());
   Serial.println("Calibration complete");
 
-  n1.setLux(150);
+  n1.setLux(50);
+  n1.setupint_1();
 
   //float d1 = n1.consensusAlgorithm();
   /*analogWrite(ledPin,ceil(d1*255/100));
@@ -71,9 +71,12 @@ void loop() {
     counter  = 0;
     counter2 = 0;
     }*/
-    if (flag2) {
-      Read_serial();
-      flag2 = 0;
+
+  n1.consensusAlgorithm();
+
+  if (flag2) {
+    Read_serial();
+    flag2 = 0;
   }
 
   //button();
@@ -135,5 +138,13 @@ void receiveEvent(int howMany) {
 }
 
 ISR(TIMER1_COMPA_vect) {
-  ctrl1.PID();
+  n1.set_Brightness();
+  n1.PID();
+  /*counter = counter + 1;
+    if (counter % 100 == 0)
+    {
+    Serial.println(counter);
+    Serial.println(micros());
+    }
+  */
 }

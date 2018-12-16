@@ -380,6 +380,7 @@ void Node::consensusAlgorithm() {
 
       delay(200);
     }
+
   }
 
   if (max_act) { // Request Illuminance value above LED actuation, power everthing at max
@@ -419,7 +420,7 @@ void Node::PID() {
   //Serial.print("\t");
   float p = k1 * e;                       // porpotional term
   float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(u);    // integal term
-  //float i = i_ant + (e    + e_ant);     // integal term
+  //float i = i_ant + (e + e_ant);     // integal term
   if (abs(e) < 0.5)
     p = 0;
 

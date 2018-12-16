@@ -1,13 +1,25 @@
 #include "Comm_I2C.h"
 
-bool Comm_I2C::sync;
+volatile bool Comm_I2C::sync;
+int Comm_I2C::iter;
 
 Comm_I2C::Comm_I2C(int _addr){
 	addr = _addr;
-  sync = false;
 }
 
+
 void Comm_I2C::msgAnalyse(int id, String data_str){
+
+  	switch(id){
+      case 1:
+        //Serial.println("Consensus Flag -> T");
+        consensus_flag = true;
+        consensus_data = data_str;
+        break;
+
+      default:
+        break;
+    }
 
 }
 
@@ -15,9 +27,7 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 
 	Wire.beginTransmission(dest_addr);
 	Wire.write(id);
-	Wire.write(" ");
 	Wire.write(addr);
-	Wire.write(" ");
 	Wire.write(data_str.c_str());
 	
 	return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
@@ -26,14 +36,9 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str){
 
 int Comm_I2C::msgBroadcast(int id, String data_str){
 
-	return msgSend(id,BROADCAST_ADDR,data_str);; // Returns 0 if the msg was sent successfully	
+	return msgSend(id,BROADCAST_ADDR,data_str); // Returns 0 if the msg was sent successfully	
 }
 
-
-const char* Comm_I2C::getConsensusData(){
-
-  return consensus_data.c_str();
-}
 
 int Comm_I2C::getAddr() const{
 
@@ -41,35 +46,41 @@ int Comm_I2C::getAddr() const{
 }
 
 void Comm_I2C::msgSyncCallback(int num){
-  if(Wire.available() > 0){
-      if(Wire.read() == 'a') 
+  /*if(Wire.available() > 0){
+      //char c = Wire.read();      
+      if(Wire.read() == 'a'){
+        //Serial.write(c);
         sync = true;
-  }
+      }        
+  }*/
 }
 
 void Comm_I2C::msgSync(){
+
+  sync = false;
   
   while(!sync){
-    Wire.onReceive(msgSyncCallback);
-    delay(1000);
+    //Serial.println(sync);
+    //Wire.onReceive(msgSyncCallback);
+    delay(200);
+    //Serial.println(sync);
     Wire.beginTransmission(BROADCAST_ADDR);
     Wire.write('a');
     Wire.endTransmission();
   }
 
-  Serial.println("Ready!");
-  delay(1000);
+  sync = false;
+
+  //Serial.println("Sync!");
+  delay(200);
 }
 
 String Comm_I2C::floatToString(float num){
 
-	char* str;
-	dtostrf(num,5,2,str);
+	char str[8];
+	dtostrf(num,7,2,str);
 	String str2(str);
 
 	return str2;
 
 }
-
-
-
