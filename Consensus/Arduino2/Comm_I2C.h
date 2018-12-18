@@ -12,7 +12,7 @@ class Comm_I2C {
     static void msgSyncCallback(int);
 
   protected:
-
+    float u2 = 0;
     int addr;
     static int iter;
     String floatToString(float num);
@@ -29,6 +29,7 @@ class Comm_I2C {
     int msgBroadcast(int id, String data_str);
     int msgSend(int id, int dest_addr, String data_str);
     void msgSync();
+    void getOtherU(float _u2);
 
     // Flags
     volatile static bool sync;

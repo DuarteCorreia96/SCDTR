@@ -65,7 +65,9 @@ bool Node::setPWM(int PWM) {
 
 float Node::extIlluminance() {
 
-  o = readIlluminance() - k[0] * d[0] - k[1] * d[1];
+  o = readIlluminance() - k[0] * u - k[1] * u2;
+  Serial.println(u);
+  Serial.println(u2);
   return o;
 }
 
@@ -102,6 +104,8 @@ bool Node::calib() {
 
     //setPWM(0);
     o = readIlluminance();
+    Serial.print("Iext=");
+    Serial.println(o);
 
     delay(1000);
 
@@ -109,7 +113,9 @@ bool Node::calib() {
     delay(500);
     float x_max = readIlluminance();
     k[0] = (x_max - o) / 100;
-
+    Serial.print("Imax=");
+    Serial.println(x_max);
+    Serial.print("K0=");
     Serial.println(k[0]);
 
     delay(1000);
@@ -120,7 +126,9 @@ bool Node::calib() {
 
     float x_max2 = readIlluminance();
     k[1] = (x_max2 - o) / 100;
-
+    Serial.print("Imax2=");
+    Serial.println(x_max2);
+    Serial.print("K1=");
     Serial.println(k[1]);
 
     calib_flag = !calib_flag;
@@ -297,6 +305,7 @@ void Node::consensusAlgorithm() {
   y[1] = 0;
 
   o = extIlluminance(); // Update external illuminance estimate
+  //o = 0;
   //Serial.println(0);
   initConsensus(d_avg);
 
@@ -390,7 +399,8 @@ void Node::consensusAlgorithm() {
   }
 
   L_ref = k[0] * d_best[0]; // Value to be sent to the local controller
-  Serial.println(L_ref);
+  Serial.println(d_best[0]);
+  //Serial.println(L_ref);
   consensusCheck = true;
   Lcon = L;
   msgSync();
@@ -435,6 +445,7 @@ void Node::PID() {
   i_ant = i;
   e_ant = e;
   y_ant = y;
+  msgBroadcast(2, floatToString(u));
 }
 
 void Node::init_PID(float ku, float T) {

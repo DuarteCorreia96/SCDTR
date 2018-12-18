@@ -48,7 +48,7 @@ void setup() {
   Serial.println("Calibration complete");
 
   n1.setLux(50);
-  n1.setupint_1();
+  //n1.setupint_1();
 
   //float d1 = n1.consensusAlgorithm();
   /*analogWrite(ledPin,ceil(d1*255/100));
@@ -56,6 +56,9 @@ void setup() {
 }
 
 void loop() {
+
+  
+  //Serial.println(n1.readIlluminance());
 
   /*if (counter % 1 == 0) {
     readVoltage(counter2);
