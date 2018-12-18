@@ -38,7 +38,6 @@ class Consensus : public Comm_I2C {
     float d_best[2];
     // FLAGS
     bool consensus_init;
-
     void consensus_update(float *d_best, float *d_out);
 };
 
