@@ -31,55 +31,53 @@ using boost::asio::ip::tcp;
 
 class session {
 
-public:
-	session(boost::asio::io_service& io_service, std::shared_ptr <SerialComm> arduino_);
+	public:
+		session(boost::asio::io_service& io_service, std::shared_ptr <SerialComm> arduino_);
 
-	tcp::socket& socket();
+		tcp::socket& socket();
 
-	void start();
+		void start();
 
-private:
-	void handle_read(const boost::system::error_code& error,
-      size_t bytes_transferred);
+	private:
+		void handle_read(const boost::system::error_code& error,
+				size_t bytes_transferred);
 
-	void handle_write(const boost::system::error_code& error);
+		void handle_write(const boost::system::error_code& error);
 
-	void deadline_handler(const boost::system::error_code & ec);
+		void deadline_handler(const boost::system::error_code & ec);
 
 
-	// aux variables <----------
-	// to stop the timer
-	int stop = 1;
-	char order = 'z'; // <-- useless
-	int address = -1;
-	char type = 'z';
+		// aux variables <----------
+		// to stop the timer
+		int stop = 1;
+		int address = -1;
+		char type = 'z';
 
-	tcp::socket socket_;
-  	enum { max_length = 1024 };
-  	char request_[max_length];
-  	std::string response_;
+		tcp::socket socket_;
 
-  	std::shared_ptr <SerialComm> arduino;
-  	boost::asio::steady_timer tim;
+		enum { max_length = 1024 };
+		char request_[max_length];
+		std::string response_;
+
+		boost::asio::steady_timer tim;
 };
 
 //----------------------------------------------------------------------------
 
 class Tcp_server {
 
-public:
-	Tcp_server(boost::asio::io_service& io_service, short port, std::shared_ptr <SerialComm> arduino_);
+	public:
+		Tcp_server(boost::asio::io_service& io_service, short port, std::shared_ptr <SerialComm> arduino_);
 
-private:
-	void start_accept();
+	private:
+		void start_accept();
 
-	void handle_accept(session* new_session,
-      const boost::system::error_code& error);
+		void handle_accept(session* new_session, const boost::system::error_code& error);
 
-	boost::asio::io_service& io_service_;
-	tcp::acceptor acceptor_;
+		boost::asio::io_service& io_service_;
+		tcp::acceptor acceptor_;
 
-	std::shared_ptr <SerialComm> arduino;
+		std::shared_ptr <SerialComm> arduino;
 };
 
 #endif

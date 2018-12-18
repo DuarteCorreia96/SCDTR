@@ -41,7 +41,7 @@ void Database::insertBuffer(int address, float lux, float dc) {
 
 void Database::clearBuffers(){
 
-	for(int i = 0; i < 127; i++) {
+	for(int i = 0; i < maxBuffers; i++) {
 		buffs[i].ilum.clear();
 		buffs[i].dutyCycle.clear();
 		buffs[i].lastRead = 0;

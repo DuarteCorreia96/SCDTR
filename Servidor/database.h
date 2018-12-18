@@ -25,22 +25,18 @@ private:
 	};
 
 	struct Buffer {
-		// for illuminance values
-		boost::circular_buffer<struct Info> ilum;
-		// for duty cycle values
-		boost::circular_buffer<struct Info> dutyCycle;
+		
+		boost::circular_buffer<struct Info> ilum; 				// for illuminance values
+		boost::circular_buffer<struct Info> dutyCycle; 		// for duty cycle values
 
 		int lastRead = 0;
 	};
 
-	// Create a circular buffer for floats
-	Buffer buffs[127];
+	const int maxBuffers = 127;
+	Buffer buffs[maxBuffers]; 													// num of nodes for the T gets
 
-	// num of nodes for the T gets
-	int numBuffers = 0;
-
-	// time of the last restart 
-	std::chrono::system_clock::time_point last_restart;
+	int numBuffers = 0;																	// num of nodes for the T gets
+	std::chrono::system_clock::time_point last_restart;	// time of the last restart 
 
 public:
 
@@ -52,8 +48,7 @@ public:
 
 	void clearBuffers();
 
-	std::string getCurrentValues(char message[]);
-
+	std::string getCurrentValues(char variable, int desk);
 	std::string getLastMinuteValues(char message[]);
 
 	// for the T gets

@@ -62,260 +62,260 @@ void I2Comm::readData(char msgBuf[], int size) {
 	strncpy(message, msgBuf, size);
 
 	switch (message[0]) {
-				case 'g':
-					// convert to int
-					if( sscanf(message, "%c %d %f %f", &order, &address, &lux, &pwm) != 4)
-						break; // message hasnt been sent correctly
+		case 'g':
+			// convert to int
+			if( sscanf(message, "%c %d %f %f", &order, &address, &lux, &pwm) != 4)
+				break; // message hasnt been sent correctly
 
+			mtx.lock();
+			db->insertBuffer(address, lux, pwm);
+			mtx.unlock();
+
+			break;
+		case 'o':
+			//printf("Entered 'o' case\n");
+			// convert to int
+			if( sscanf(message, "%c %d %f", &order, &address, &occup) != 3)
+				break; // message hasnt been sent correctly
+
+			mtx.lock();
+			//inserts in the variable
+			if (occup == 1){
+				db->occupancy = 1;
+			} else if (occup == 0) {
+				db->occupancy = 0;
+			}
+
+			db->last_sender = address;
+
+			// sets the flag to HIGH
+			oFlag = 1;
+			mtx.unlock();
+			
+			break;
+		case 'L':
+			// convert to float
+			if( sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+				break; // message hasnt been sent correctly
+
+			mtx.lock();
+			//inserts in the variable
+			db->ilumLowB = value;
+			db->last_sender = address;
+
+			// sets the flag to HIGH
+			LFlag = 1;
+			mtx.unlock();
+
+			break;
+		case 'O':
+			// convert to float
+			if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+				break; // message hasnt been sent correctly
+
+			mtx.lock();
+			//inserts in the variable
+			db->extilum = value;
+
+			db->last_sender = address;
+
+			// sets the flag to HIGH
+			OFlag = 1;
+
+			mtx.unlock();
+
+			break;
+		case 'r':
+			// convert to float
+			if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+				break; // message hasnt been sent correctly
+
+			mtx.lock();
+			//inserts in the variable
+			db->refilum = value;
+
+			db->last_sender = address;
+
+			// sets the flag to HIGH
+			rFlag = 1;
+			mtx.unlock();
+
+			break;
+		case 't':
+			// convert to float
+			if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+				break; // message hasnt been sent correctly
+
+			mtx.lock();
+			//inserts in the variable
+			db->timeSeconds = value;
+
+			db->last_sender = address;
+
+			// sets the flag to HIGH
+			tFlag = 1;
+
+			mtx.unlock();
+
+			break;
+
+		case 'p':		
+			// fazer para o caso de ser só um i <----------------
+
+			if (message[2] != 'T') {
+				// convert to float
+				if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->instPow = value;
+
+				db->last_sender = address;
+
+				pFlag = 1;
+
+				mtx.unlock();
+				
+			// fazer caso de ser o total 
+			} else {
+				if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->instPowT += value;
+				mtx.unlock();
+				
+
+				// para detetar se as mensagens de todos os arduinos já foram recebidas
+				numReceives++;
+
+				if (db->getNumBuffers() == numReceives) {
 					mtx.lock();
-					db->insertBuffer(address, lux, pwm);
+					pTFlag = 1;
 					mtx.unlock();
+					numReceives = 0;
+				}
+			}
 
-					break;
-				case 'o':
-					//printf("Entered 'o' case\n");
-					// convert to int
-					if( sscanf(message, "%c %d %f", &order, &address, &occup) != 3)
-						break; // message hasnt been sent correctly
+			break;
+		case 'e':
+			// fazer para o caso de ser só um i
+			if (message[2] != 'T') {
+				if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+					break; // message hasnt been sent correctly
 
+				mtx.lock();
+				//inserts in the variable
+				db->accumEn = value;
+
+				db->last_sender = address;
+
+				eFlag = 1;
+				mtx.unlock();
+				
+			// fazer caso de ser o total 
+			} else {
+				if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->accumEnT += value;
+
+				mtx.unlock();
+
+				// para detetar se as mensagens de todos os arduinos já foram recebidas
+				numReceives++;
+
+				if (db->getNumBuffers() == numReceives) {
 					mtx.lock();
-					//inserts in the variable
-					if (occup == 1){
-						db->occupancy = 1;
-					} else if (occup == 0) {
-						db->occupancy = 0;
-					}
-
-					db->last_sender = address;
-
-					// sets the flag to HIGH
-					oFlag = 1;
+					eTFlag = 1;
 					mtx.unlock();
-					
-					break;
-				case 'L':
-					// convert to float
-					if( sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-						break; // message hasnt been sent correctly
+					numReceives = 0;
+				}
+			}
+			
+			break;
+		case 'c':
 
+			// fazer para o caso de ser só um i 
+			if (message[2] != 'T') {
+				// convert to float
+				if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->accumConf = value;
+
+				db->last_sender = address;
+
+				cFlag = 1;
+				mtx.unlock();
+			// fazer caso de ser o total 
+			} else {
+				if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->accumConfT += value;
+
+				mtx.unlock();
+
+				// para detetar se as mensagens de todos os arduinos já foram recebidas
+				numReceives++;
+
+				if (db->getNumBuffers() == numReceives) {
 					mtx.lock();
-					//inserts in the variable
-					db->ilumLowB = value;
-					db->last_sender = address;
-
-					// sets the flag to HIGH
-					LFlag = 1;
+					cTFlag = 1;
 					mtx.unlock();
+					numReceives = 0;
+				}
+			}
 
-					break;
-				case 'O':
-					// convert to float
-					if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-						break; // message hasnt been sent correctly
+			break;
+		case 'v':
 
+			// fazer para o caso de ser só um i 
+			if (message[2] != 'T') {
+				if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->accumVar = value;
+
+				db->last_sender = address;
+				
+				vFlag = 1;
+				mtx.unlock();
+
+			// fazer caso de ser o total 
+			} else {
+				if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
+					break; // message hasnt been sent correctly
+
+				mtx.lock();
+				//inserts in the variable
+				db->accumVarT += value;
+
+				mtx.unlock();
+
+				// para detetar se as mensagens de todos os arduinos já foram recebidas
+				numReceives++;
+
+				if (db->getNumBuffers() == numReceives) {
 					mtx.lock();
-					//inserts in the variable
-					db->extilum = value;
-
-					db->last_sender = address;
-
-					// sets the flag to HIGH
-					OFlag = 1;
-
+					vTFlag = 1;
 					mtx.unlock();
-
-					break;
-				case 'r':
-					// convert to float
-					if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-						break; // message hasnt been sent correctly
-
-					mtx.lock();
-					//inserts in the variable
-					db->refilum = value;
-
-					db->last_sender = address;
-
-					// sets the flag to HIGH
-					rFlag = 1;
-					mtx.unlock();
-
-					break;
-				case 't':
-					// convert to float
-					if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-						break; // message hasnt been sent correctly
-
-					mtx.lock();
-					//inserts in the variable
-					db->timeSeconds = value;
-
-					db->last_sender = address;
-
-					// sets the flag to HIGH
-					tFlag = 1;
-
-					mtx.unlock();
-
-					break;
-
-				case 'p':		
-					// fazer para o caso de ser só um i <----------------
-
-					if (message[2] != 'T') {
-						// convert to float
-						if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->instPow = value;
-
-						db->last_sender = address;
-
-						pFlag = 1;
-
-						mtx.unlock();
-						
-					// fazer caso de ser o total 
-					} else {
-						if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->instPowT += value;
-						mtx.unlock();
-						
-
-						// para detetar se as mensagens de todos os arduinos já foram recebidas
-						numReceives++;
-
-						if (db->getNumBuffers() == numReceives) {
-							mtx.lock();
-							pTFlag = 1;
-							mtx.unlock();
-							numReceives = 0;
-						}
-					}
-
-					break;
-				case 'e':
-					// fazer para o caso de ser só um i
-					if (message[2] != 'T') {
-						if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumEn = value;
-
-						db->last_sender = address;
-
-						eFlag = 1;
-						mtx.unlock();
-						
-					// fazer caso de ser o total 
-					} else {
-						if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumEnT += value;
-
-						mtx.unlock();
-
-						// para detetar se as mensagens de todos os arduinos já foram recebidas
-						numReceives++;
-
-						if (db->getNumBuffers() == numReceives) {
-							mtx.lock();
-							eTFlag = 1;
-							mtx.unlock();
-							numReceives = 0;
-						}
-					}
-					
-					break;
-				case 'c':
-
-					// fazer para o caso de ser só um i 
-					if (message[2] != 'T') {
-						// convert to float
-						if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumConf = value;
-
-						db->last_sender = address;
-
-						cFlag = 1;
-						mtx.unlock();
-					// fazer caso de ser o total 
-					} else {
-						if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumConfT += value;
-
-						mtx.unlock();
-
-						// para detetar se as mensagens de todos os arduinos já foram recebidas
-						numReceives++;
-
-						if (db->getNumBuffers() == numReceives) {
-							mtx.lock();
-							cTFlag = 1;
-							mtx.unlock();
-							numReceives = 0;
-						}
-					}
-
-					break;
-				case 'v':
-
-					// fazer para o caso de ser só um i 
-					if (message[2] != 'T') {
-						if (sscanf(message, "%c %d %f", &order, &address, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumVar = value;
-
-						db->last_sender = address;
-						
-						vFlag = 1;
-						mtx.unlock();
-
-					// fazer caso de ser o total 
-					} else {
-						if (sscanf(message, "%c %c %f", &order, &total, &value) != 3)
-							break; // message hasnt been sent correctly
-
-						mtx.lock();
-						//inserts in the variable
-						db->accumVarT += value;
-
-						mtx.unlock();
-
-						// para detetar se as mensagens de todos os arduinos já foram recebidas
-						numReceives++;
-
-						if (db->getNumBuffers() == numReceives) {
-							mtx.lock();
-							vTFlag = 1;
-							mtx.unlock();
-							numReceives = 0;
-						}
-					}
-					
-					break;
+					numReceives = 0;
+				}
+			}
+			
+			break;
 	}
 
 	return;
