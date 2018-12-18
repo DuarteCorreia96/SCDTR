@@ -297,6 +297,7 @@ void Node::consensusAlgorithm() {
   y[1] = 0;
 
   o = extIlluminance(); // Update external illuminance estimate
+  //Serial.println(o);
   initConsensus(d_avg);
 
   while (j < N_iter) {
@@ -380,7 +381,7 @@ void Node::consensusAlgorithm() {
 
       delay(200);
     }
-
+msgSync();
   }
 
   if (max_act) { // Request Illuminance value above LED actuation, power everthing at max
@@ -392,6 +393,7 @@ void Node::consensusAlgorithm() {
   Serial.println(L_ref);
   consensusCheck = true;
   Lcon = L;
+  //msgSync();
 }
 
 float Node::Windup(float u) {
@@ -471,5 +473,5 @@ void Node::setupint_1() {
   TCCR1B |= (1 << CS11) | (1 << CS10); // Set prescaler
   TIMSK1 |= (1 << OCIE1A); // enable timer compare interrupt
 
-  sei(); //allow interrupts
+  sei(); //allow interrupts*/
 }
