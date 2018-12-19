@@ -45,8 +45,8 @@ class Node : public Comm_I2C {
     float Windup(float u);
 
     // FLAGS
-    bool max_act;
-    bool min_act;
+    bool max_act = false;
+    bool min_act = false;
     //bool gotCopyFirst;
 
   protected:

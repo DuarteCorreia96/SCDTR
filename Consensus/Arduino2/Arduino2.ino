@@ -1,4 +1,5 @@
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 #include "Comm_I2C.h"
 #include "node.h"
 
@@ -152,6 +153,8 @@ ISR(TIMER1_COMPA_vect) {
     }
   */
 =======
+=======
+>>>>>>> Stashed changes
 #include "Comm_I2C.h"
 #include "node.h"
 
@@ -301,5 +304,8 @@ ISR(TIMER1_COMPA_vect) {
     Serial.println(micros());
     }
   */
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 }
