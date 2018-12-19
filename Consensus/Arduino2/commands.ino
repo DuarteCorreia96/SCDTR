@@ -47,6 +47,7 @@ void set_LUX_Ref() {
 
   float new_v;
   sscanf(v_read.c_str(), "s %.3f", &new_v);
+  Serial.println("Bacalhao");
   //new_v = constrain(new_v, 0, 255);
   //ref_brightness = new_v;
   //get_initial_val();
