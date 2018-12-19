@@ -65,9 +65,7 @@ bool Node::setPWM(int PWM) {
 
 float Node::extIlluminance() {
 
-  o = readIlluminance() - k[0] * u - k[1] * u2;
-  Serial.println(u);
-  Serial.println(u2);
+  o = readIlluminance() - k[0] * d[0] - k[1] * d[1];
   return o;
 }
 
@@ -296,7 +294,7 @@ void Node::consensusAlgorithm() {
   float d1_m = pow(k[0], 2) + pow(k[1], 2);
   float d1_n = d1_m - pow(k[0], 2);
   float rho_inv = 1.0 / rho;
-  int N_iter = 50;
+  int N_iter = 20;
 
   float d1, d2;
   int j = 0;
