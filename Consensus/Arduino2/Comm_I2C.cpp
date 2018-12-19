@@ -75,7 +75,7 @@ void Comm_I2C::msgSync(){
   sync = false;
 
   //Serial.println("Sync!");
-  delayMicroseconds(500);
+  delay(2);
 }
 
 String Comm_I2C::floatToString(float num){

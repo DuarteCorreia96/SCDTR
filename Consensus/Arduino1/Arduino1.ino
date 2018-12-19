@@ -23,7 +23,7 @@ int c = 1;
 Node n1(m, b, OWN_ADDR, c);
 
 void setup() {
-  //delay(3000);
+  delay(3000);
   n1.consensus_flag = true; // One arduino has to be started with this flag to false!
   n1.calib_flag = true; // One arduino has to be started with this flag to false!
   //n1.consensus_init = true;
@@ -32,7 +32,7 @@ void setup() {
   Wire.begin(OWN_ADDR); // Initialise as slave
   Wire.onReceive(receiveEvent);
 
-  n1.setLux(110);
+  n1.setLux(150);
 
   TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
@@ -40,6 +40,7 @@ void setup() {
   //n1.msgSync(); // Wait for the two Arduinos to sync
   while (!n1.calib());
   Serial.println("Calibration complete");
+  delay(1000);  
   
   n1.initConsensus();
   

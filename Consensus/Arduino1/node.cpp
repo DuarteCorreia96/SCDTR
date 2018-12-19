@@ -216,8 +216,8 @@ void Node::getCopy() {
   char d21_str[8];
   char d22_str[8];
 
-  Serial.print("Received: ");
-  Serial.println(consensus_data.c_str());
+  /*Serial.print("Received: ");
+  Serial.println(consensus_data.c_str());*/
 
   String aux_str = consensus_data;
   char* token = strtok((char*)aux_str.c_str(), "/");
@@ -236,6 +236,8 @@ void Node::getCopy() {
   d_out[0] = d_aux[0];
   d_out[1] = d_aux[1];
 
+  consensus_data = "";
+
 }
 
 void Node::sendCopy(float d1, float d2) {
@@ -243,8 +245,8 @@ void Node::sendCopy(float d1, float d2) {
   String str = floatToString(d2) + "/" + floatToString(d1);
   msgBroadcast(1,str);
 
-  Serial.print("Sent: ");
-  Serial.println(str.c_str());
+  /*Serial.print("Sent: ");
+  Serial.println(str.c_str());*/
 }
 
 void Node::initConsensus() {
@@ -257,7 +259,10 @@ void Node::initConsensus() {
   cost_best = COST_BEST;
   d1_m = pow(k[0],2) + pow(k[1],2);
   d1_n = d1_m - pow(k[0],2);
+  /*Serial.println(d[0]);
+  Serial.println(d[1]);*/
   o = extIlluminance(); // Update external illuminance estimate
+  Serial.println(o);
 
   if (consensus_flag) {
     delay(2);
@@ -281,6 +286,9 @@ void Node::initConsensus() {
 }
 
 void Node::consensusAlgorithm() {
+
+  d_out[0] = -1;
+  d_out[1] = -1;
 
   if(iter_consensus > 50) return;
   //Serial.println(iter_consensus);
@@ -330,15 +338,18 @@ void Node::consensusAlgorithm() {
     max_act = false;
   }
 
-  if (min_act) { // if the illuminance request is below LED actuation
+  /*if (min_act) { // if the illuminance request is below LED actuation
     d_best[0] = 0;
     min_act = false;
-  }
+  }*/
    
   msgSync();
   sendCopy(d_best[0], d_best[1]);
-  delay(2);
+  delay(50);
   getCopy();
+
+  /*Serial.println(d_out[0]);
+  Serial.println(d_out[1]);*/
 
   // Average solutions from all nodes
   d_avg[0] = (d_best[0] + d_out[0]) / 2;
@@ -349,7 +360,7 @@ void Node::consensusAlgorithm() {
   y[1] += rho * (d_best[1] - d_avg[1]);
   
   L_ref = k[0]*d_best[0]; // Value to be sent to the local controller
-  //Serial.println(L_ref);
+  Serial.println(L_ref);
   ++iter_consensus;
 
   consensusCheck = true;
