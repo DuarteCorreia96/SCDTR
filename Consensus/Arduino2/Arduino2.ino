@@ -46,9 +46,10 @@ void setup() {
   //Serial.println("Here!");
   while (!n1.calib());
   Serial.println("Calibration complete");
+  delay(1000);
 
   n1.setLux(50);
-  //n1.setupint_1();
+  n1.setupint_1();
 
   //float d1 = n1.consensusAlgorithm();
   /*analogWrite(ledPin,ceil(d1*255/100));

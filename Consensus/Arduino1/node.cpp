@@ -306,6 +306,7 @@ void Node::consensusAlgorithm() {
   //o = 0;
   //Serial.println(0);
   initConsensus(d_avg);
+  //unsigned long init = micros();
 
   while (j < N_iter) {
 
@@ -390,6 +391,8 @@ void Node::consensusAlgorithm() {
     }
     msgSync();
   }
+  //unsigned long finishcon=micros()-init;
+  //Serial.println(finishcon);
 
   if (max_act) { // Request Illuminance value above LED actuation, power everthing at max
     d_best[0] = 100;
@@ -443,7 +446,7 @@ void Node::PID() {
   i_ant = i;
   e_ant = e;
   y_ant = y;
-  msgBroadcast(2, floatToString(u));
+  //msgBroadcast(2, floatToString(u));
 }
 
 void Node::init_PID(float ku, float T) {

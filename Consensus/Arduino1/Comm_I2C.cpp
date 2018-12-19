@@ -69,7 +69,7 @@ void Comm_I2C::msgSync() {
   while (!sync) {
     //Serial.println(sync);
     //Wire.onReceive(msgSyncCallback);
-    delay(200);
+    delayMicroseconds(20000);
     //Serial.println(sync);
     Wire.beginTransmission(BROADCAST_ADDR);
     Wire.write('a');
@@ -79,7 +79,7 @@ void Comm_I2C::msgSync() {
   sync = false;
 
   //Serial.println("Sync!");
-  delay(200);
+  delayMicroseconds(20000);
 }
 
 String Comm_I2C::floatToString(float num) {
