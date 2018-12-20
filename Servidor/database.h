@@ -32,8 +32,8 @@ private:
 		int lastRead = 0;
 	};
 
-	const int maxBuffers = 127;
-	Buffer buffs[maxBuffers]; 													// num of nodes for the T gets
+
+	Buffer buffs[127]; 													        // num of nodes for the T gets
 
 	int numBuffers = 0;																	// num of nodes for the T gets
 	std::chrono::system_clock::time_point last_restart;	// time of the last restart 
