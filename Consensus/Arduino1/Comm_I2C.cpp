@@ -19,11 +19,10 @@ void Comm_I2C::msgAnalyse(int id, String data_str) {
       consensus_flag = true;
       consensus_data = data_str;
       break;
+
     case 2:
-      getOtherU(atof(data_str.c_str()));
-      break;
-
-
+      consensus_data = data_str;
+      
     default:
       break;
   }
@@ -69,7 +68,7 @@ void Comm_I2C::msgSync() {
   while (!sync) {
     //Serial.println(sync);
     //Wire.onReceive(msgSyncCallback);
-    delayMicroseconds(20000);
+    delayMicroseconds(1500);
     //Serial.println(sync);
     Wire.beginTransmission(BROADCAST_ADDR);
     Wire.write('a');
@@ -79,7 +78,7 @@ void Comm_I2C::msgSync() {
   sync = false;
 
   //Serial.println("Sync!");
-  delayMicroseconds(20000);
+  delayMicroseconds(2000);
 }
 
 String Comm_I2C::floatToString(float num) {

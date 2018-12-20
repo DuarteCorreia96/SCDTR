@@ -31,7 +31,7 @@ Node n1(m, b, OWN_ADDR, c);
 
 void setup() {
   delay(3000);
-  n1.consensus_flag = true; // One arduino has to be started with this flag to false!
+  //n1.consensus_flag = true; // One arduino has to be started with this flag to false!
   n1.calib_flag = true; // One arduino has to be started with this flag to false!
   //n1.consensus_init = true;
   Serial.begin(9600); // Increase baudrate!?
@@ -42,47 +42,28 @@ void setup() {
   TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
   TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
 
-  //n1.msgSync(); // Wait for the two Arduinos to sync
-  //Serial.println("Here!");
   while (!n1.calib());
   Serial.println("Calibration complete");
   delay(1000);
 
-  n1.setLux(50);
+  n1.setLux(100);
+  n1.initConsensus();
   n1.setupint_1();
 
-  //float d1 = n1.consensusAlgorithm();
-  /*analogWrite(ledPin,ceil(d1*255/100));
-    readVoltage();*/
 }
 
 void loop() {
-
+  
+  n1.consensusAlgorithm();
   //Serial.println(n1.readIlluminance());
 
-  /*if (counter % 1 == 0) {
-    readVoltage(counter2);
-    counter2++;
-    }
-
-    counter++;
-    flag = 0;
-    }*/
-
-  /*if (counter2 == npoints) {
-    //PrintStep();
-    counter  = 0;
-    counter2 = 0;
-    }*/
-
-  n1.consensusAlgorithm();
-
-  if (flag2) {
+  /*if (flag2) {
     Read_serial();
     flag2 = 0;
-  }
+  }*/
 
   //button();
+  delay(500);
 }
 
 void receiveEvent(int howMany) {
@@ -141,7 +122,7 @@ void receiveEvent(int howMany) {
 }
 
 ISR(TIMER1_COMPA_vect) {
-  n1.set_Brightness();
+  //n1.set_Brightness();
   n1.PID();
   /*counter = counter + 1;
     if (counter % 100 == 0)

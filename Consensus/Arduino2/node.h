@@ -6,11 +6,14 @@
 #include <Arduino.h>
 #include <string.h>
 
+#define COST_BEST 1000000
+
 
 class Node : public Comm_I2C {
 
   private:
     float u = 0;
+    float L_desk;
     float L_ref;
     float c;
     float k11; //this has to come from somewhere else... I2C!
@@ -21,10 +24,11 @@ class Node : public Comm_I2C {
     float d_best[2];
     float d_out[2];
     float cost_best;
+    float d1_m;
+    float d1_n;
     bool checkFeasibility(float d11, float d12);
     void checkSolution(float d1_test, float d2_test);
     float getCost(float d1, float d2);
-    void initConsensus(float* d_avg);
     void getCopy();
     void sendCopy(float d1, float d2);
     float Lcon;
@@ -45,6 +49,8 @@ class Node : public Comm_I2C {
     // FLAGS
     bool max_act;
     bool gotCopyFirst;
+
+    static int iter_consensus;
 
   protected:
     float L;
@@ -79,6 +85,7 @@ class Node : public Comm_I2C {
 
     //~Consensus();
     void consensusAlgorithm();
+    void initConsensus();
 
     void  PID();
     void init_PID(float ku, float T);
