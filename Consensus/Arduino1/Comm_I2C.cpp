@@ -11,7 +11,7 @@ void Comm_I2C::getOtherU(float _u2) {
   u2 = _u2;
 }
 
-void Comm_I2C::msgAnalyse(int id, String data_str) {
+void Comm_I2C::msgAnalyse(char id, String data_str) {
 
   switch (id) {
     case 1:
@@ -22,14 +22,14 @@ void Comm_I2C::msgAnalyse(int id, String data_str) {
 
     case 2:
       consensus_data = data_str;
-      
+
     default:
       break;
   }
 
 }
 
-int Comm_I2C::msgSend(int id, int dest_addr, String data_str) {
+int Comm_I2C::msgSend(char id, int dest_addr, String data_str) {
 
   Wire.beginTransmission(dest_addr);
   Wire.write(id);
@@ -40,9 +40,15 @@ int Comm_I2C::msgSend(int id, int dest_addr, String data_str) {
 
 }
 
-int Comm_I2C::msgBroadcast(int id, String data_str) {
+int Comm_I2C::msgBroadcast(char id, String data_str) {
 
-  return msgSend(id, BROADCAST_ADDR, data_str); // Returns 0 if the msg was sent successfully
+  Wire.beginTransmission(BROADCAST_ADDR);
+  Wire.write(id);
+  Wire.write(' ');
+  Wire.write(addr + 48);
+  Wire.write(data_str.c_str());
+
+  return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
 }
 
 
@@ -70,7 +76,7 @@ void Comm_I2C::msgSync() {
     //Wire.onReceive(msgSyncCallback);
     delayMicroseconds(1500);
     //Serial.println(sync);
-    Wire.beginTransmission(BROADCAST_ADDR);
+    Wire.beginTransmission(OTHER_ADDR);
     Wire.write('a');
     Wire.endTransmission();
   }

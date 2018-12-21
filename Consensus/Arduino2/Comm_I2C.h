@@ -4,6 +4,10 @@
 #include <Wire.h>
 #include <Arduino.h>
 #define BROADCAST_ADDR 0
+#define RASP_ADDR 4
+#define OTHER_ADDR 1
+#define LOWB 50
+#define UPPB 150
 
 class Comm_I2C {
 
@@ -25,9 +29,9 @@ class Comm_I2C {
     Comm_I2C(int addr);
     //~Comm_I2C();
     int getAddr() const;
-    void msgAnalyse(int id, String data_str);
-    int msgBroadcast(int id, String data_str);
-    int msgSend(int id, int dest_addr, String data_str);
+    void msgAnalyse(char id, String data_str);
+    int msgBroadcast(char id, String data_str);
+    int msgSend(char id, int dest_addr, String data_str);
     void msgSync();
     void getOtherU(float _u2);
 

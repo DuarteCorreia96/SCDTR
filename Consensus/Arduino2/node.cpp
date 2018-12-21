@@ -66,8 +66,8 @@ bool Node::setPWM(int PWM) {
 
 
 float Node::extIlluminance() {
-  
-  return readIlluminance() - k[0]*d_best[0] - k[1]*d_out[1];
+
+  return readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
 }
 
 NodeInfo* Node::getNodeInfo() {
@@ -100,7 +100,7 @@ bool Node::calib() {
 
     msgSync();
     delay(1000);
-    
+
     o = readIlluminance();
 
     delay(1000);
@@ -240,7 +240,7 @@ void Node::getCopy() {
 void Node::sendCopy(float d1, float d2) {
 
   String str = floatToString(d2) + "/" + floatToString(d1);
-  msgBroadcast(1, str);
+  msgSend(1, OTHER_ADDR, str);
 
   //Serial.print("Sent: ");
   //Serial.println(str.c_str());
@@ -254,19 +254,19 @@ void Node::initConsensus() {
   d1_m = pow(k[0], 2) + pow(k[1], 2);
   d1_n = d1_m - pow(k[0], 2);
   o = extIlluminance(); // Update external illuminance estimate
-  //Serial.println(o);      
+  //Serial.println(o);
   y[0] = 0; // Lagrange Multipliers
   y[1] = 0;
 
   /*if (consensus_flag) {
     delay(200);
     d_out[1] = atof(consensus_data.c_str()); // get ref value from the other node
-    msgBroadcast(2,floatToString(Lcon/k[0]));
-  } else {
-    msgBroadcast(2,floatToString(Lcon/k[0]));
+    msgSend(2,OTHER_ADDR,floatToString(Lcon/k[0]));
+    } else {
+    msgSend(2,OTHER_ADDR,floatToString(Lcon/k[0]));
     delay(200);
     d_out[1] = atof(consensus_data.c_str()); // get ref value from the other node
-  }*/
+    }*/
 
   consensus_data = "";
 
@@ -281,25 +281,25 @@ void Node::initConsensus() {
 
 void Node::consensusAlgorithm() {
 
-  L_desk = k[0]*d_best[0] + k[1]*d_out[1] + o; // Value to be sent to the local controller
+  L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o; // Value to be sent to the local controller
 
   Serial.println(L_desk);
   Serial.println(readIlluminance());
   Serial.println(o);
 
   /*if((abs(readIlluminance() - L_desk) > 10 && consensusCheck) || consensus_flag){
-    msgBroadcast(2,"");
+    msgSend(2,OTHER_ADDR,"");
     delay(5);
     consensusCheck = false;
     consensus_flag = false;
     initConsensus();
     iter_consensus = 1;
-  }*/
+    }*/
 
   /*float a = abs(extIlluminance() - o);
-  Serial.println(a);*/
+    Serial.println(a);*/
 
-  if(iter_consensus > 20){
+  if (iter_consensus > 20) {
     o = extIlluminance();
     consensusCheck = true;
     return;
@@ -311,13 +311,13 @@ void Node::consensusAlgorithm() {
   cost_best = COST_BEST;
   d_best[0] = -1;
   d_best[1] = -1;
- 
+
   float z1 = rho * d_avg[0] - c - y[0];
   float z2 = rho * d_avg[1] - y[1];
 
   // Unconstrained minimum
-  d1 = rho_inv*z1;
-  d2 = rho_inv*z2;
+  d1 = rho_inv * z1;
+  d2 = rho_inv * z2;
   //checkSolution(d1,d2);
 
   // Solution in the DLB (Dimming lower bound)
@@ -364,20 +364,20 @@ void Node::consensusAlgorithm() {
   y[1] += rho * (d_best[1] - d_avg[1]);
 
   ++iter_consensus;
-  L_ref = k[0]*d_best[0];
+  L_ref = k[0] * d_best[0];
 
   /*unsigned long finish = micros() - init;
-  Serial.println(finish);*/
+    Serial.println(finish);*/
 
   /*Serial.println(d_avg[0]);
-  Serial.println(d_avg[1]);*/
+    Serial.println(d_avg[1]);*/
 
   /*if(iter_consensus == 20){
     Serial.println(L_desk);
     Serial.println(d_best[0]);
     Serial.println(d_best[1]);
-  }*/
-  
+    }*/
+
 }
 
 float Node::Windup(float u) {
@@ -442,6 +442,57 @@ void Node::set_Brightness() {
   //Serial.println(des_brightness);
 }
 
+/*void Node::button() {
+  if (digitalRead(buttonPin) == HIGH)
+    return;
+
+  for (int k = 0; k < 50; k++) {
+
+    delay(1);
+    if (digitalRead(buttonPin) == HIGH)
+      return;
+  }
+
+  while (digitalRead(buttonPin) == LOW);
+  Occu = !Occu;
+  Serial.println(Occu);
+  }*/
+
+void Node::Read_serial(char v_read) {
+  if (v_read == 'o') {
+    Occu = !Occu;
+    iter_consensus = 1;
+  }
+}
+
+void Node::set_occupancy() {
+  //button();
+  if (Occu == 1) {
+    setLux(UPPB); //Set desired illuminance to 150 lux
+    //Serial.println("Lux set to Upper Bound");
+  }
+  else {
+    setLux(LOWB); //Set desired illuminance to 50 lux
+    // Serial.println("Lux set to Lower Bound");
+  }
+}
+
+void Node::SendInfo(int counter) {
+  if (counter % 10 == 0) {
+    msgBroadcast('l', floatToString(L)); //Send Illuminance
+    Serial.println(L);
+    msgBroadcast('p', floatToString(map(u, 0, 100, 0, 255))); //Send PWM
+    Serial.println(map(u, 0, 100, 0, 255));
+    msgBroadcast('e', floatToString(o)); //Send External Illuminance
+    Serial.println(o);
+    msgBroadcast('o', floatToString(Occu)); //Send Occupancy
+    Serial.println(Occu);
+    msgBroadcast('b', floatToString(LOWB)); //Send Lower Bound
+    Serial.println(LOWB);
+    msgBroadcast('r', floatToString(L_ref)); //Send L
+    Serial.println(L_ref);
+  }
+}
 
 void Node::setupint_1() {
 

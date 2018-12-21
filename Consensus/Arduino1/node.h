@@ -12,6 +12,8 @@
 class Node : public Comm_I2C {
 
   private:
+    float pwm_val;
+    float Occu;
     float u = 0;
     float L_desk;
     float L_ref;
@@ -61,9 +63,11 @@ class Node : public Comm_I2C {
     float d[2];
     const int ledPin = 11;
     const int sensorPin = A0;
+    int buttonPin = 4;
     const int R1 = 10000;
     const int Vcc = 5;
     volatile static bool consensusCheck;
+    char v_read;
 
   public:
 
@@ -87,7 +91,13 @@ class Node : public Comm_I2C {
     void consensusAlgorithm();
     void initConsensus();
 
-    void  PID();
+    void set_occupancy();
+    void button();
+    void SendInfo(int counter);
+
+    void Read_serial(char v_read);
+
+    void PID();
     void init_PID(float ku, float T);
     void set_Brightness();
     void setupint_1();

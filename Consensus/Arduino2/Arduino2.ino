@@ -3,6 +3,7 @@
 
 //#define BROADCAST_ADDR 0
 //#define SLAVE_ADDR 2
+//#define RASP_ADDR 4
 #define OWN_ADDR 2
 
 // increasing the frequency of PWM signal
@@ -10,8 +11,11 @@
 //fastest possible
 
 volatile bool flag2 = false;
+volatile bool flag3 = false;
 const byte mask = B11111000;
 int prescale = 1;
+char v_read;
+
 int counter = 0;
 
 /*const int ledPin = 11;
@@ -21,7 +25,7 @@ int counter = 0;
   const int Vcc = 5;*/
 
 const float m = -0.72;
-const float b = 5.0170; // LDR (com fita)
+const float b = 5.0840; // LDR (sem fita)
 
 //String id_str = "A1: ";
 int c = 1;
@@ -46,23 +50,33 @@ void setup() {
   Serial.println("Calibration complete");
   delay(1000);
 
-  n1.setLux(100);
+  n1.setLux(LOWB);
   n1.initConsensus();
   n1.setupint_1();
 
 }
 
 void loop() {
-  
+
+  n1.set_occupancy();
+
   n1.consensusAlgorithm();
-  /*n1.consensusAlgorithm();
+  //Serial.println(n1.readIlluminance());
 
   if (flag2) {
-    Read_serial();
-    flag2 = 0;
-  }*/
+    n1.Read_serial(v_read);
+    v_read = 'a';
+    flag2 = false;
+  }
 
-  //button();
+  if (flag3)
+  {
+    counter += counter;
+    Serial.println(counter);
+    n1.SendInfo(counter);
+    flag3 = false;
+  }
+
   delay(500);
 }
 
@@ -121,9 +135,17 @@ void receiveEvent(int howMany) {
     }*/
 }
 
+void serialEvent() {
+  flag2 = true;
+  v_read = Serial.read();
+}
+
 ISR(TIMER1_COMPA_vect) {
   //n1.set_Brightness();
   n1.PID();
+  flag3 = true;
+  //counter += counter;
+  //n1.SendInfo(counter);
   /*counter = counter + 1;
     if (counter % 100 == 0)
     {
