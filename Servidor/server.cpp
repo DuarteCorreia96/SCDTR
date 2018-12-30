@@ -8,6 +8,9 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
+#ifndef __SERVER_RASP__
+#define __SERVER_RASP__
+
 #include <ctime>
 #include <iostream>
 #include <string>
@@ -15,6 +18,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/asio.hpp>
+#include "data_storage.h"
 
 using boost::asio::ip::tcp;
 
@@ -39,7 +43,9 @@ public:
   }
 
 private:
-  tcp_connection(boost::asio::io_service &io_service) : socket_(io_service){}
+  tcp_connection(boost::asio::io_service &io_service, std::shared_ptr<data_storage> db_): 
+    socket_(io_service)
+    db(db_){}
 
   void handle_read(const boost::system::error_code &error, size_t bytes_transferred){
     
@@ -68,16 +74,17 @@ private:
     memset(request_, 0, sizeof(request_));
   }
 
-void handle_write(const boost::system::error_code &error){
-  if (!error) {
+  void handle_write(const boost::system::error_code &error){
+    if (!error) {
 
-    start();
+      start();
 
-  } else {
-    delete this;
+    } else {
+      delete this;
+    }
   }
-}
 
+  std::shared_ptr<data_storage> db;
   tcp::socket socket_;
   std::string message_;
   enum {max_length = 1024};
@@ -111,17 +118,4 @@ private:
   boost::asio::io_service &io_service_;
 };
 
-int main(){
-  
-  try{
-    boost::asio::io_service io_service;
-    tcp_server server(io_service);
-    io_service.run();
-  }
-  catch (std::exception &e){
-
-    std::cerr << e.what() << std::endl;
-  }
-
-  return 0;
-}
+#endif

@@ -15,35 +15,39 @@ void data_storage::init_variables(){
   }
 }
 
-void data_storage::insert_duty(int pwm, int node){
+void data_storage::insert_duty(float pwm, int node){
 
-  Info duty_cycle;
-  duty_cycle.data = pwm/255;
-  duty_cycle.timestamp = std::chrono::system_clock::now();
+  Info duty;
+  duty.data = pwm/255;
+  duty.timestamp = std::chrono::system_clock::now();
 
-  buff[node].duty_cycle.push_front(duty_cycle);
+  buff[node].duty_cycle.push_front(duty);
   update_after_duty(node);
 }
 
-void data_storage::insert_illu(int illu, int node){
+void data_storage::insert_illu(float illu, int node){
 
   Info illuminance;
   illuminance.data = illu;
   illuminance.timestamp = std::chrono::system_clock::now();
 
-  buff[node].duty_cycle.push_front(illuminance);
-  update_after_duty(node);
+  buff[node].illum.push_front(illuminance);
+  update_after_illum(node);
 }
 
 void data_storage::update_after_duty(int node){
 
   inst_power[node] = buff[node].duty_cycle[0].data;
   std::chrono::system_clock::time_point now =
-      std::chrono::system_clock::now();
+    buff[node].duty_cycle[0].timestamp;
 
-  float time_st_dc = std::chrono::duration_cast<std::chrono::seconds>(now - buff[node].duty_cycle[0].timestamp).count();
+  std::chrono::system_clock::time_point last;
+  if(buff[node].duty_cycle.size() > 1)
+    last = buff[node].duty_cycle[1].timestamp;
+  else
+    last = last_restart;
 
-  energy_coms[node] += inst_power[node] * time_st_dc;
+  energy_coms[node] += inst_power[node] * std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count()/1000;
 }
 
 void  data_storage::update_after_illum(int node){
@@ -54,13 +58,13 @@ void  data_storage::update_after_illum(int node){
 
   if (buff[node].illum.size() > 3){
 
-    float time_st_dc = std::chrono::duration_cast<std::chrono::seconds>(buff[node].illum[0].timestamp - buff[node].illum[1].timestamp).count();
+    float time_st_dc = std::chrono::duration_cast<std::chrono::milliseconds>(buff[node].illum[0].timestamp - buff[node].illum[1].timestamp).count();
     if ((buff[node].illum[0].data - buff[node].illum[1].data) * 
         (buff[node].illum[1].data - buff[node].illum[2].data) < 0){
 
-      comfort_flicker[node] += abs(buff[node].illum[0].data - buff[node].illum[1].data) +
-                               abs(buff[node].illum[1].data - buff[node].illum[2].data) /
-                                   (2 * time_st_dc);
+      comfort_flicker[node] +=  abs(buff[node].illum[0].data - buff[node].illum[1].data) +
+                                abs(buff[node].illum[1].data - buff[node].illum[2].data) /
+                                (2 * time_st_dc / 1000);
     } else {
       comfort_flicker[node] += 0;
     }

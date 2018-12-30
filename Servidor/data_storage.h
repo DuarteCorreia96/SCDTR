@@ -29,8 +29,8 @@ public:
   void init_variables();
   void update_after_duty(int node);
   void update_after_illum(int node);
-  void insert_duty(int pwm, int node);
-  void insert_illu(int illu, int node);
+  void insert_duty(float pwm, int node);
+  void insert_illu(float illu, int node);
 
   Buffer buff[NODES];
   bool occupancy[NODES];
