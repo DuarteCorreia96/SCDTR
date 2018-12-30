@@ -3,6 +3,7 @@
 
 volatile bool Node::consensusCheck = false;
 int Node::iter_consensus = 1;
+int Node::iter = 1;
 
 /*Node::Node(){
     d[0] = 0; // Duty-cycle set by the local controller
@@ -25,7 +26,7 @@ Node::Node(const float _m, const float _b, int _addr, float _c, float _rho) {
   d_avg[0] = 0; d_avg[1] = 0;
   d_best[0] = 0; d_avg[1] = 0;
   d_out[0] = 0; d_out[1] = 0;
-  d[0] = 0; d[1] = 0;
+  //d[0] = 0; d[1] = 0;
 }
 
 
@@ -67,12 +68,15 @@ bool Node::setPWM(int PWM) {
 
 float Node::extIlluminance() {
 
-  return readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
+  float a = readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
+  if (a < 0) return 0;
+  
+  return a;
 }
 
 NodeInfo* Node::getNodeInfo() {
 
-  NodeInfo* n;
+  /*NodeInfo* n;
   n->m = m;
   n->b = b;
   n->L = L_ref;
@@ -82,7 +86,7 @@ NodeInfo* Node::getNodeInfo() {
   n->d1 = d[0];
   n->d2 = d[1];
 
-  return n;
+  return n;*/
 }
 
 void Node::setLux(float _L) {
@@ -90,56 +94,70 @@ void Node::setLux(float _L) {
   //Serial.println(_L);
 }
 
+void Node::NodeSetup(){
+
+  k = new float[ndev];
+  d_best = new float[ndev];
+  y = new float[ndev];
+  d_avg = new float[ndev];
+  d_best = new float[ndev];
+  d_out = new float[ndev];
+}
+
 bool Node::calib() {
 
+  if(iter == 1) NodeSetup();
+  
   setPWM(0);
+  float oj, lj;
+  calib_flag = false;
 
-  if (iter > 2) return true;
+  if (iter > ndev) return true;
 
-  if (calib_flag) {
-
-    msgSync();
-    delay(1000);
+  if (iter == addr) {
 
     o = readIlluminance();
-
-    delay(1000);
+    delay(500);
 
     setPWM(255);
     delay(500);
     float x_max = readIlluminance();
-    k[0] = (x_max - o) / 100;
-
-    Serial.println(k[0]);
-
-    delay(1000);
+    k[addr-1] = (x_max - o) / 100;
+    Serial.println(k[addr-1]);
 
     setPWM(0);
-    msgSync();
-    delay(1000);
+    //msgSync();
+    delay(500);
 
-    float x_max2 = readIlluminance();
-    k[1] = (x_max2 - o) / 100;
+    for(int j = 1; j <= ndev; j++){
 
-    Serial.println(k[1]);
+      if(j == addr) continue;
 
-    calib_flag = !calib_flag;
-    msgSync();
-    delay(1000);
+      oj = readIlluminance();
+      msgSync(j);
+      delay(500);
+      lj = readIlluminance();
+      msgSync(j);
+
+      k[j-1] = (lj - oj) / 100;
+      Serial.println(k[j-1]);
+    }
+
+    msgBroadcast(2,"");
+    delay(500);
     ++iter;
     calib();
   }
   else {
 
-    msgSync();
-    delay(1000);
-
-    msgSync();
+    msgSync(iter);
     setPWM(255);
 
-    calib_flag = !calib_flag;
-    msgSync();
-    delay(1000);
+    msgSync(iter);
+    setPWM(0);
+
+    while(!calib_flag);
+    delay(500);
     ++iter;
     calib();
   }
@@ -257,6 +275,8 @@ void Node::initConsensus() {
   //Serial.println(o);
   y[0] = 0; // Lagrange Multipliers
   y[1] = 0;
+  d_best[0] = 0;
+  d_best[1] = 0;
 
   /*if (consensus_flag) {
     delay(200);
@@ -273,28 +293,27 @@ void Node::initConsensus() {
   //d[0] = Lcon/k[0];
   //Serial.println(d[0]);
   //Serial.println(d[1]);
-  d_avg[0] = (d[0] + d_out[0]) / 2;
-  d_avg[1] = (d[1] + d_out[1]) / 2;
+  d_avg[0] = (d_best[0] + d_out[0]) / 2;
+  d_avg[1] = (d_best[1] + d_out[1]) / 2;
 
-  msgSync();
+  //msgSync();
 }
 
 void Node::consensusAlgorithm() {
 
   L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o; // Value to be sent to the local controller
 
-  Serial.println(L_desk);
+  /*Serial.println(L_desk);
   Serial.println(readIlluminance());
-  Serial.println(o);
+  Serial.println(o);*/
 
-  /*if((abs(readIlluminance() - L_desk) > 10 && consensusCheck) || consensus_flag){
+  /*if(abs(o - extIlluminance()) > 10 && consensusCheck){
     msgSend(2,OTHER_ADDR,"");
     delay(5);
     consensusCheck = false;
-    consensus_flag = false;
     initConsensus();
     iter_consensus = 1;
-    }*/
+  }*/
 
   /*float a = abs(extIlluminance() - o);
     Serial.println(a);*/
@@ -350,7 +369,7 @@ void Node::consensusAlgorithm() {
     d_best[1] = 100;
   }
 
-  msgSync();
+  //msgSync();
   sendCopy(d_best[0], d_best[1]);
   delay(5);
   getCopy();
@@ -461,7 +480,20 @@ void Node::set_Brightness() {
 void Node::Read_serial(char v_read) {
   if (v_read == 'o') {
     Occu = !Occu;
-    iter_consensus = 1;
+    //iter_consensus = 1;
+  }
+
+  if(v_read == 'd'){
+    delete[] k;
+    delete[] d_best;
+    delete[] y;
+    delete[] d_avg;
+    delete[] d_best;
+    delete[] d_out;
+
+    Serial.println("Bye");
+
+    while(1);
   }
 }
 

@@ -18,13 +18,11 @@ class Node : public Comm_I2C {
     float L_desk;
     float L_ref;
     float c;
-    float k11; //this has to come from somewhere else... I2C!
-    float k12;
     float rho;
-    float y[2];
-    float d_avg[2];
-    float d_best[2];
-    float d_out[2];
+    float* y;
+    float* d_avg;
+    float* d_best;
+    float* d_out;
     float cost_best;
     float d1_m;
     float d1_n;
@@ -34,12 +32,10 @@ class Node : public Comm_I2C {
     void getCopy();
     void sendCopy(float d1, float d2);
     float Lcon;
-    //float k1, ki, k2;
-    //float ku = 0.035;
-    float k1 = 0.01575; //atenção, depende da frequência de amostragem
+    float k1 = 0.01575;
     float k2 = 0.00945;
     float ki = 0.0342;
-    float kwdp = 1.7;
+    float kwdp = 0.034;
     float T = 35.0877;
     float i_ant = 0;
     float e_ant = 0;
@@ -48,19 +44,22 @@ class Node : public Comm_I2C {
     float des_brightness;
     float Windup(float u);
 
+    void NodeSetup();
+
     // FLAGS
     bool max_act;
     bool gotCopyFirst;
 
     static int iter_consensus;
+    static int iter;
 
   protected:
     float L;
     float m;
     float b;
-    float k[2];
+    float* k;
     float o;
-    float d[2];
+    //float* d;
     const int ledPin = 11;
     const int sensorPin = A0;
     int buttonPin = 4;
@@ -82,7 +81,6 @@ class Node : public Comm_I2C {
     NodeInfo* getNodeInfo();
     void setLux(float _L);
 
-    bool calib_flag;
     const char* getConsensusData();
     bool calib();
     int msgConsensus(char id, int src_addr, String data_str);

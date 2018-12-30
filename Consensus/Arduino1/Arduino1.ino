@@ -1,70 +1,74 @@
 #include "Comm_I2C.h"
 #include "node.h"
+#include <EEPROM.h>
 
 //#define BROADCAST_ADDR 0
 //#define SLAVE_ADDR 2
 //#define RASP_ADDR 4
-#define OWN_ADDR 1
+//#define OWN_ADDR 1
 
 // increasing the frequency of PWM signal
 // mask bits that are not prescale
-//fastest possible
+// fastest possible
+const byte mask = B11111000;
+int prescale = 1;
 
 volatile bool flag2 = false;
 volatile bool flag3 = false;
-const byte mask = B11111000;
-int prescale = 1;
 char v_read;
-
 int counter = 0;
 
-/*const int ledPin = 11;
-  const int sensorPin = A0;
+uint8_t addr = 0;
+float m = 0;
+float b = 0;
 
-  const int R1 = 10000;
-  const int Vcc = 5;*/
-
-const float m = -0.72;
-const float b = 5.0840; // LDR (sem fita)
-
-//String id_str = "A1: ";
 int c = 1;
 
-//float L = 150.0; // The illuminance has to be set by the user!
-Node n1(m, b, OWN_ADDR, c);
+bool first_time = true;
+Node *n1_p;
 
 void setup() {
-  delay(3000);
-  //n1.consensus_flag = true; // One arduino has to be started with this flag to false!
-  n1.calib_flag = true; // One arduino has to be started with this flag to false!
-  //n1.consensus_init = true;
-  Serial.begin(9600); // Increase baudrate!?
-  Serial.println("<Arduino 1 is ready>");
-  Wire.begin(OWN_ADDR); // Initialise as slave
+
+  if(first_time){
+    addr = EEPROM.read(0);
+    EEPROM.get(1,m);
+    EEPROM.get(5,b);
+    Node n1(m, b, addr, c);
+    n1_p = &n1;
+    first_time = false;
+  }
+  
+  Serial.begin(9600);
+  Serial.println("<Arduino is ready>");
+  Wire.begin(addr); // Initialise as slave
   Wire.onReceive(receiveEvent);
 
   TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
-  TWAR = (OWN_ADDR << 1) | 1; // Enable broadcast to be received
+  TWAR = (addr << 1) | 1; // Enable broadcast to be received
 
-  while (!n1.calib());
-  Serial.println("Calibration complete");
   delay(1000);
+  n1_p->findNodes();
 
-  n1.setLux(LOWB);
-  n1.initConsensus();
-  n1.setupint_1();
+  delay(1000);
+  while (!n1_p->calib());
+  Serial.println("Calibration complete");
+  //delay(1000);
+
+  //n1_p->setLux(LOWB);
+  //n1_p->initConsensus();
+  //n1_p->setupint_1();
 
 }
 
 void loop() {
 
-  n1.set_occupancy();
+  /*n1_p->set_occupancy();
 
   n1.consensusAlgorithm();
-  //Serial.println(n1.readIlluminance());
+  //Serial.println(n1_p->readIlluminance());
 
   if (flag2) {
-    n1.Read_serial(v_read);
+    n1_p->Read_serial(v_read);
     v_read = 'a';
     flag2 = false;
   }
@@ -73,11 +77,11 @@ void loop() {
   {
     counter += counter;
     Serial.println(counter);
-    n1.SendInfo(counter);
+    n1_p->SendInfo(counter);
     flag3 = false;
   }
 
-  delay(500);
+  //delay(500);*/
 }
 
 void receiveEvent(int howMany) {
@@ -89,50 +93,26 @@ void receiveEvent(int howMany) {
 
   if (Wire.available() > 0) {
     char c = Wire.read();
-    //Serial.write(c);
+
     if (c == 'a') {
-      n1.sync = true;
+      n1_p->sync = true;
       return;
     }
 
     id = c; // not a sync message
-
-    /*id = Wire.read();
-      Serial.write(id);
-      src_addr = Wire.read();
-
-      while(Wire.available() > 0)
-      data_str += Wire.read();
-
-      n1.msgAnalyse(id, data_str);*/
   }
 
   while (Wire.available() > 0) {
-    /*Serial.println(id);
-      Serial.println("\n");*/
+
     src_addr = Wire.read();
-    //Serial.println(src_addr);
-    //Serial.println("\n");
 
     while (Wire.available() > 0) {
       char c2 = Wire.read();
       data_str += c2;
-      //Serial.write(c2);
     }
 
-    n1.msgAnalyse(id, data_str);
+    n1_p->msgAnalyse(id, data_str);
   }
-
-  /*if(Wire.available() > 0){
-      id = Wire.read();
-      //Serial.write(id);
-      src_addr = Wire.read();
-
-    while(Wire.available() > 0)
-       data_str += Wire.read();
-
-    n1.msgAnalyse(id, data_str);
-    }*/
 }
 
 void serialEvent() {
@@ -141,9 +121,9 @@ void serialEvent() {
 }
 
 ISR(TIMER1_COMPA_vect) {
-  //n1.set_Brightness();
-  n1.PID();
-  flag3 = true;
+  //n1_p->set_Brightness();
+  n1_p->PID();
+  //flag3 = true;
   /*counter = counter + 1;
     if (counter % 100 == 0)
     {

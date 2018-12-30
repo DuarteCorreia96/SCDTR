@@ -13,14 +13,16 @@ class Comm_I2C {
 
   private:
 
-    static void msgSyncCallback(int);
+    //static void msgSyncCallback(int);
 
   protected:
     float u2 = 0;
     int addr;
-    static int iter;
+    int ndev;
+    //static int iter;
     String floatToString(float num);
     String consensus_data;
+    bool calib_flag;
 
   public:
 
@@ -30,10 +32,12 @@ class Comm_I2C {
     //~Comm_I2C();
     int getAddr() const;
     void msgAnalyse(char id, String data_str);
-    int msgBroadcast(char id, String data_str);
+    void msgBroadcast(char id, String data_str);
     int msgSend(char id, int dest_addr, String data_str);
-    void msgSync();
-    void getOtherU(float _u2);
+    void msgSync(int addr);
+    void findNodes();
+    //void getOtherU(float _u2);
+    
 
     // Flags
     volatile static bool sync;
