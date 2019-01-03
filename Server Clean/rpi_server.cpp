@@ -186,8 +186,7 @@ void thread_teste(){
   float r;
   srand(time(NULL));
 
-  while (true)
-  {
+  while (true){
 
     std::this_thread::sleep_for(std::chrono::milliseconds(50));
     r = (((double)rand() / (RAND_MAX)) - 0.5) * 2;
@@ -205,12 +204,9 @@ void thread_teste(){
 
     mtx.unlock();
 
-    if (node == 2)
-    {
+    if (node == 2){
       node = 1;
-    }
-    else
-    {
+    } else {
       node = 2;
     }
   }
