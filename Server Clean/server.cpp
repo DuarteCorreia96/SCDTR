@@ -11,6 +11,11 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
   float seconds;
   bool flag_dc = false;
 
+  if (error){
+    std::cout << "Client disconnected" << std::endl;
+    return;
+  }
+
   if (request_[0] == 'r'){
 
     db->init_variables();
@@ -128,10 +133,11 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
                                         boost::asio::placeholders::error));
   if (flag_dc){
     try{
-      std::cout << "Client disconnected" << std::endl;
+
       socket_.shutdown(socket_.shutdown_both);
       socket_.close();
     }
+
     catch (std::exception &e){
       std::cout << "Error Closing Socket" << e.what() << std::endl;
     }
