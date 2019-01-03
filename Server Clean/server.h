@@ -48,8 +48,7 @@ private:
 
   void handle_read(const boost::system::error_code &error, size_t bytes_transferred);
   void handle_write(const boost::system::error_code &error){
-    if (!error) { start();
-    } else { delete this; }
+    if (!error) start();
   }
 
   std::shared_ptr<data_storage> db;
@@ -77,6 +76,7 @@ private:
   void handle_accept(tcp_connection::pointer new_connection, const boost::system::error_code &error){
     if (!error){
 
+      std::cout << "Client connected" << std::endl;
       new_connection->start();
       start_accept();
     }

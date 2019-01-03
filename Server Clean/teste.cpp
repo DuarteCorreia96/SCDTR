@@ -20,6 +20,7 @@ using boost::asio::ip::tcp;
 std::mutex mtx;
 auto p = std::make_shared<data_storage>();
 volatile bool flag = false;
+volatile bool flag_print = false;
 
 void thread1(){
 
@@ -95,47 +96,76 @@ void thread3(){
   
   int node = 2;
   while (true){
-
+    
     std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+    if(flag_print){
 
-    std::cout << "\nNode: "  << node << std::endl;
-    std::cout << "Illuminance = " << p->buff[node].illum[0].data << std::endl;
-    std::cout << "Duty Cycle  = " << p->buff[node].duty_cycle[0].data << std::endl;
-    std::cout << "Lower Bound = " << p->lbound[node] << std::endl;
-    std::cout << "External Ilu= " << p->ext_illum[node] << std::endl;
-    std::cout << "Control Ref = " << p->control_ref[node] << std::endl;
-    std::cout << "Inst Power  = " << p->inst_power[node] << std::endl;
-    std::cout << "Energy Coms = " << p->energy_coms[node] << std::endl;
-    std::cout << "Confort Err = " << p->comfort_error[node]/p->buff[node].illum.size() << std::endl;
-    std::cout << "Confort Flic= " << p->comfort_flicker[node]/p->buff[node].illum.size() << std::endl;
+      std::cout << "\nNode: "  << node << std::endl;
+      std::cout << "Illuminance = " << p->buff[node].illum[0].data << std::endl;
+      std::cout << "Duty Cycle  = " << p->buff[node].duty_cycle[0].data << std::endl;
+      std::cout << "Lower Bound = " << p->lbound[node] << std::endl;
+      std::cout << "External Ilu= " << p->ext_illum[node] << std::endl;
+      std::cout << "Control Ref = " << p->control_ref[node] << std::endl;
+      std::cout << "Inst Power  = " << p->inst_power[node] << std::endl;
+      std::cout << "Energy Coms = " << p->energy_coms[node] << std::endl;
+      std::cout << "Confort Err = " << p->comfort_error[node]/p->buff[node].illum.size() << std::endl;
+      std::cout << "Confort Flic= " << p->comfort_flicker[node]/p->buff[node].illum.size() << std::endl;
 
-    auto now = std::chrono::system_clock::now();
-    float seconds = std::chrono::duration_cast<std::chrono::seconds>(now - p->last_restart).count();
-    std::cout << "Last Restart= "  << seconds << std::endl;
+      auto now = std::chrono::system_clock::now();
+      float seconds = std::chrono::duration_cast<std::chrono::seconds>(now - p->last_restart).count();
+      std::cout << "Last Restart= "  << seconds << std::endl;
 
-    if(node == 2){
-      node = 1;
-    } else {
-      node = 2;
+      if(node == 2){
+        node = 1;
+      } else {
+        node = 2;
+      }
+
+      if(flag == true){
+
+        std::stringstream msg;
+        msg << "thread2: " << p->k << std::endl;
+        std::cout << msg.str();  
+        flag = false;    
+      }
     }
+  }
+}
 
-    if(flag == true){
+void read_command(){
 
-      std::stringstream msg;
-      msg << "thread2: " << p->k << std::endl;
-      std::cout << msg.str();  
-      flag = false;    
+  char c;
+  while (true){
+
+    c = getchar();
+    switch (c){
+    case 'p':
+      std::cout << "\nSwitching Printing Values Received" << std::endl;
+      flag_print = !flag_print;
+      break;
+
+    case 'q':
+      std::cout << "\nClosing Server" << std::endl;
+      exit(0);
+      break;
+
+    default:
+      std::cout << "\nWrong command" << std::endl;
+      break;
     }
+    getchar();
   }
 }
 
 int main(){
 
-  std::thread threadwrite(thread1);
+  //std::thread threadwrite(thread1);
   std::thread threadread(thread2);
   std::thread print_thread(thread3);
+  std::thread re_thread(read_command);
 
-  threadwrite.join();
+  //threadwrite.join();
   threadread.join();
   print_thread.join();
+  re_thread.join();
 }
