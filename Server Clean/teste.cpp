@@ -18,19 +18,17 @@ using namespace std;
 using boost::asio::ip::tcp;
 
 std::mutex mtx;
-
-class teste_class{
-  public:
-    std::shared_ptr<data_storage> p;
-    teste_class(std::shared_ptr<data_storage> p_) : p(p_) {}
-  private:
-};
-
 auto p = std::make_shared<data_storage>();
-bsc_xfer_t xfer;
-volatile bool flag = false;
 
 void thread1(){
+
+  bsc_xfer_t xfer;
+  gpioInitialise();
+
+  gpioSetMode(18, PI_ALT3);
+  gpioSetMode(19, PI_ALT3);
+
+  xfer.control = (0x04 << 16) | 0x305; // Set I2C slave Address to 0x00
 
   while(true){
 
@@ -119,25 +117,10 @@ void thread3(){
     } else {
       node = 2;
     }
-
-    if(flag == true){
-
-      std::stringstream msg;
-      msg << "thread2: " << p->k << std::endl;
-      std::cout << msg.str();  
-      flag = false;    
-    }
   }
 }
 
 int main(){
-
-  gpioInitialise();
-
-  gpioSetMode(18, PI_ALT3);
-  gpioSetMode(19, PI_ALT3);
-
-  xfer.control = (0x04 << 16) | 0x305; // Set I2C slave Address to 0x00
 
   std::thread threadwrite(thread1);
   std::thread threadread(thread2);
