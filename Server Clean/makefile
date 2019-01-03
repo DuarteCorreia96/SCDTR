@@ -12,7 +12,7 @@ CFLAGS = -std=c++11 -lpthread -lboost_system
 LDFLAGS_SERVER = -lpigpio -lrt -lpthread -lboost_system
 LDFLAGS_CLIENT = -lrt -lpthread -lboost_system
 
-OBJS_SERVER = data_storage.o server.o teste.o
+OBJS_SERVER = data_storage.o server.o rpi_server.o
 OBJS_CLIENT = client.o
 
 server: $(OBJS_SERVER)
