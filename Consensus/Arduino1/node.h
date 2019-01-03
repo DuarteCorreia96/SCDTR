@@ -2,11 +2,13 @@
 #define _NODE_H
 
 #include <math.h>
+#include "Vector.h"
 #include "Comm_I2C.h"
 #include <Arduino.h>
 #include <string.h>
 
 #define COST_BEST 1000000
+#define MAX_LUMM 5
 
 
 class Node : public Comm_I2C {
@@ -19,18 +21,20 @@ class Node : public Comm_I2C {
     float L_ref;
     float c;
     float rho;
-    float* y;
-    float* d_avg;
-    float* d_best;
-    float* d_out;
+    Vector<float> y;
+    Vector<float> d_avg;
+    Vector<float> d_best;
+    Vector<float> d_test;
+    Vector<float> d_out;
+    Vector<float> z;
     float cost_best;
     float d1_m;
     float d1_n;
-    bool checkFeasibility(float d11, float d12);
-    void checkSolution(float d1_test, float d2_test);
-    float getCost(float d1, float d2);
+    bool checkFeasibility();
+    void checkSolution();
+    float getCost();
     void getCopy();
-    void sendCopy(float d1, float d2);
+    void sendCopy();
     float Lcon;
     float k1 = 0.01575;
     float k2 = 0.00945;
@@ -57,14 +61,15 @@ class Node : public Comm_I2C {
     float L;
     float m;
     float b;
-    float* k;
+    Vector<float> k;
+    //float k[2];
     float o;
     //float* d;
-    const int ledPin = 11;
+    /*const int ledPin = 11;
     const int sensorPin = A0;
     int buttonPin = 4;
     const int R1 = 10000;
-    const int Vcc = 5;
+    const int Vcc = 5;*/
     volatile static bool consensusCheck;
     char v_read;
 
