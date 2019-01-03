@@ -6,10 +6,12 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
   char command;
   int node;
   char var;
+  char node_c;
   int k;
   auto now = std::chrono::system_clock::now();
   float seconds;
   bool flag_dc = false;
+  int time_count = 0;
 
   if (error){
     std::cout << "Client disconnected" << std::endl;
@@ -24,12 +26,16 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
   } else if (request_[0] == 'd'){
 
     flag_dc = true;
-    message_ = "disconnect user\n";
+    message_ = "Disconnected user\n";
 
-  } else if (sscanf(request_, "%c %c %d", &command, &var, &node) != 3){
+  } else if (sscanf(request_, "%c %c %c", &command, &var, &node_c) != 3 || (node = node_c - '0') < 0){
 
     message_ = "Wrong message\n";
 
+  } else if (node >= NODES && node_c != 'T'){
+
+    message_ = "Node not connected \n";
+    
   } else if (command == 'g'){
   
     switch (var){
@@ -58,7 +64,7 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
         break;
 
       case 'p':
-        if(char(node) == 'T'){
+        if(char(node_c) == 'T'){
           message_ = "p T " + std::to_string(db->inst_power[1] + db->inst_power[2]) + "\n";
         } else {
           message_ = "p " + std::to_string(node) + " " + std::to_string(db->inst_power[node]) + "\n";
@@ -72,7 +78,8 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
         break;
 
       case 'e':
-        if(char(node) == 'T'){
+
+        if(char(node_c) == 'T'){
           message_ = "e T " + std::to_string(db->energy_coms[1] + db->energy_coms[2]) + "\n";
         } else {
           message_ = "e " + std::to_string(node) + " " + std::to_string(db->energy_coms[node]) + "\n";
@@ -80,7 +87,8 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
         break;
       
       case 'c':
-        if(char(node) == 'T'){
+
+        if(char(node_c) == 'T'){
           message_ = "c T " + std::to_string(db->comfort_error[1] / db->buff[1].illum.size() + db->comfort_error[2] / db->buff[2].illum.size()) + "\n";
         } else {
           message_ = "c " + std::to_string(node) + " " + std::to_string(db->comfort_error[node] / db->buff[node].illum.size()) + "\n";
@@ -88,16 +96,16 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
         break;
 
       case 'v':
-        if(char(node) == 'T'){
+
+        if(char(node_c) == 'T'){
           message_ = "v T " + std::to_string(db->comfort_flicker[1] / db->buff[1].illum.size() + db->comfort_flicker[2] / db->buff[2].illum.size()) + "\n";
         } else {
           message_ = "v " + std::to_string(node) + " " + std::to_string(db->comfort_flicker[node] / db->buff[node].illum.size()) + "\n";
-        }     
-        
+        }         
         break;
 
       default:
-        message_ = "Wrong message";
+        message_ = "Wrong message\n";
         break;
     }
   } else if (command == 'b'){
@@ -107,7 +115,8 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
       case 'l':
         message_ = "b l " + std::to_string(node) + "\n";
         
-        while (std::chrono::duration_cast<std::chrono::seconds>(now - db->buff[node].illum[k].timestamp).count() < 60){
+        while ( (time_count = std::chrono::duration_cast<std::chrono::seconds>(now - db->buff[node].illum[k].timestamp).count()) < 60){
+          //message_ += "sb = " +  std::to_string(time_count) + ", Value = ";
           message_ += std::to_string(db->buff[node].illum[k].data) + ",\n";
           k++;
         }
@@ -115,14 +124,14 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
 
       case 'd':
         message_ = "b d " + std::to_string(node) + "\n";
-        while (std::chrono::duration_cast<std::chrono::seconds>(now - db->buff[node].duty_cycle[k].timestamp).count() < 60){
+        while ( (time_count = std::chrono::duration_cast<std::chrono::seconds>(now - db->buff[node].duty_cycle[k].timestamp).count()) < 60){
           message_ += std::to_string(db->buff[node].duty_cycle[k].data) + ",\n";
           k++;
         }
         break;
 
       default:
-        message_ = "Wrong message";
+        message_ = "Wrong message\n";
         break;
     }
   }

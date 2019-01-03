@@ -15,6 +15,9 @@
 #include "server.h"
 using namespace std;
 
+
+#include <random>
+
 using boost::asio::ip::tcp;
 
 std::mutex mtx;
@@ -76,6 +79,38 @@ void thread1(){
           // processes data
           memset(xfer.rxBuf, '\0', sizeof(char) * BSC_FIFO_SIZE);
       }
+  }
+}
+
+void thread_teste(){
+
+  int node = 1;
+  float r;
+  srand(time(NULL));
+
+  while(true){
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    r = (((double)rand() / (RAND_MAX)) - 0.5) * 2;
+
+    mtx.lock();    
+
+    p->insert_illu(120 + r, node);
+    p->insert_duty(100 + r, node);
+    p->ext_illum[node] = 10 + r;
+    p->occupancy[node] = true;
+    p->lbound[node] = 50;
+
+    r = (((double)rand() / (RAND_MAX)) - 0.5) * 2;
+    p->control_ref[node] = 120 + r;
+
+    mtx.unlock();
+
+    if(node == 2){
+      node = 1;
+    } else {
+      node = 2;
+    }
   }
 }
 
@@ -163,9 +198,11 @@ int main(){
   std::thread threadread(thread2);
   std::thread print_thread(thread3);
   std::thread command_thread(command);
+  std::thread generate(thread_teste);
 
   //threadwrite.join();
   threadread.join();
   print_thread.join();
   command_thread.join();
+  generate.join();
 }
