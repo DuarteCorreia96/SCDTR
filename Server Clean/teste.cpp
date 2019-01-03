@@ -132,7 +132,7 @@ void thread3(){
   }
 }
 
-void read_command(){
+void command(){
 
   char c;
   while (true){
@@ -162,10 +162,10 @@ int main(){
   //std::thread threadwrite(thread1);
   std::thread threadread(thread2);
   std::thread print_thread(thread3);
-  std::thread re_thread(read_command);
+  std::thread command_thread(command);
 
   //threadwrite.join();
   threadread.join();
   print_thread.join();
-  re_thread.join();
+  command_thread.join();
 }
