@@ -132,13 +132,12 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
                             boost::bind(&tcp_connection::handle_write, shared_from_this(),
                                         boost::asio::placeholders::error));
   if (flag_dc){
-    try{
+    try {
 
       socket_.shutdown(socket_.shutdown_both);
       socket_.close();
-    }
+    } catch (std::exception &e){
 
-    catch (std::exception &e){
       std::cout << "Error Closing Socket" << e.what() << std::endl;
     }
   }
