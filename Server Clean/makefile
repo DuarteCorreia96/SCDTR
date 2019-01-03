@@ -1,35 +1,34 @@
-#
-#  File name: makefile
-#
-#  Author: 2017 Renato Henriques e Paulo Eusebio
-#
-#  Usage:
-#     1) To generate the executable file for the program client,
-#       run
-#         $ make
-#
-#     2) To clean all object files and the executable file of
-#        client, run
-#         $ make clean
-#
+# Let's start with some usefull definition for colorize the echo 
+RED='\e[1;31m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+WHITE='\e[0m'
 
-#  Compiler
+OK_STRING=$(GREEN)[OK]$(WHITE)
+ERROR_STRING=$(RED)[ERRORS]$(WHITE)
+WARN_STRING=$(YELLOW)[WARNINGS]$(WHITE)
 
-CXX = g++
+CC= g++
+CFLAGS = -std=c++11 -lpthread -lboost_system
+LDFLAGS_SERVER = -lpigpio -lrt -lpthread -lboost_system
+LDFLAGS_CLIENT = -lrt -lpthread -lboost_system
 
-#  Compiler Flags
-CPPFLAGS = -g -O -Wall -pedantic -std=c++11 
-CFLAGS = -lpthread -lboost_system -lpigpio -lrt
+OBJS_SERVER = data_storage.o server.o teste.o
+OBJS_CLIENT = client.o
 
-#  Sources
-SOURCES = serialComm.cpp tcpServer.cpp i2cComm.cpp database.cpp raspServer.cpp
+server: $(OBJS_SERVER)
+	@echo -e creating executable... $(GREEN) server.exe $(WHITE)
+	@g++ -o server.exe $^ $(LDFLAGS_SERVER)
 
-server: $(SOURCES)
-	$(CXX) $(CPPFLAGS) $(SOURCES) $(CFLAGS) -o server
+client: $(OBJS_CLIENT)
+	@echo -e creating executable... $(GREEN) client.exe $(WHITE)
+	@g++ -o client.exe $^ $(LDFLAGS_CLIENT)
 
-clean::
-	rm -f *.o core a.out server *~
+%.o: %.cpp
+	@echo -e compiling $(GREEN) $<  $(WHITE) to $(YELLOW) $@ $(WHITE)
+	@g++ $(CFLAGS) -c $<
 
-depend::
-	makedepend $(SOURCES)
-# DO NOT DELETE
+clean: 
+	@echo cleaning...
+	rm -f *.o
+	rm -f *.exe

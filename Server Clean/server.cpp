@@ -9,6 +9,8 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
     int node;
     char var;
     int k;
+    auto now = std::chrono::system_clock::now();
+    float seconds;
 
     if (sscanf(request_, "%c %*s", &command) == 1 && command == 'r'){
 
@@ -55,8 +57,8 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
           break;
 
         case 't':
-          auto now = std::chrono::system_clock::now();
-          float seconds = std::chrono::duration_cast<std::chrono::seconds>(now - db->last_restart).count();
+          
+          seconds = std::chrono::duration_cast<std::chrono::seconds>(now - db->last_restart).count();
           message_ = "t " + std::to_string(node) + " " + std::to_string(seconds) + "\n";
           break;
 
@@ -86,13 +88,12 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
           break;
 
         default:
-          message_ = 'Wrong message';
+          message_ = "Wrong message";
           break;
       }
     } else if (command == 'b'){
 
       k = 1;
-      auto now = std::chrono::system_clock::now();
       switch(var){
         case 'l':
           message_ = "b l " + std::to_string(node) + "\n";
@@ -112,7 +113,7 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
           break;
 
         default:
-          message_ = 'Wrong message';
+          message_ = "Wrong message";
           break;
       }
     }

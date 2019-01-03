@@ -19,6 +19,7 @@ using boost::asio::ip::tcp;
 
 std::mutex mtx;
 auto p = std::make_shared<data_storage>();
+volatile bool flag = false;
 
 void thread1(){
 
@@ -116,6 +117,14 @@ void thread3(){
       node = 1;
     } else {
       node = 2;
+    }
+
+    if(flag == true){
+
+      std::stringstream msg;
+      msg << "thread2: " << p->k << std::endl;
+      std::cout << msg.str();  
+      flag = false;    
     }
   }
 }
