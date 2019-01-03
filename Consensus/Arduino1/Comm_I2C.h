@@ -3,6 +3,7 @@
 
 #include <Wire.h>
 #include <Arduino.h>
+#include "Vector.h"
 #define BROADCAST_ADDR 0
 #define RASP_ADDR 4
 #define OTHER_ADDR 2
@@ -17,12 +18,12 @@ class Comm_I2C {
 
   protected:
     float u2 = 0;
-    int addr;
-    int ndev;
-    //static int iter;
+    uint8_t addr;
+    static int ndev;
     String floatToString(float num);
-    String consensus_data;
+    Vector<String> consensus_data;
     bool calib_flag;
+    bool all_copies;
 
   public:
 
@@ -36,11 +37,13 @@ class Comm_I2C {
     int msgSend(char id, int dest_addr, String data_str);
     void msgSync(int addr);
     void findNodes();
+    void sayHi();
     //void getOtherU(float _u2);
     
 
     // Flags
     volatile static bool sync;
+    bool hello_flag = false;
 };
 
 #endif
