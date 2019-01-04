@@ -8,7 +8,6 @@
 #include <string.h>
 
 #define COST_BEST 1000000
-#define MAX_LUMM 5
 
 class Node : public Comm_I2C {
 

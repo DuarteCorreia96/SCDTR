@@ -51,15 +51,21 @@ void setup() {
   Serial.println("Calibration complete");
   delay(1000);
 
-  n1_p->setLux(LOWB); // Set lux reference at lower bound (50 lx)
+  //n1_p->setLux(LOWB); // Set lux reference at lower bound (50 lx)
+  n1_p->setLux(100);
   n1_p->initConsensus();
-  n1_p->consensusAlgorithm();
-  //n1_p->setupint_1();*/
+  /*while(1){
+    n1_p->consensusAlgorithm();
+    //delay(200); // Add delay to analyse Consensus results (else, the program crashes w/ Serial prints)
+  }*/
+  //n1_p->setupint_1();
 
 }
 
 void loop() {
-
+ 
+  n1_p->consensusAlgorithm();
+  delay(200);
   /*n1_p->set_occupancy();
 
   n1.consensusAlgorithm();

@@ -73,10 +73,10 @@ bool Node::setPWM(int PWM) {
 
 float Node::extIlluminance() {
 
-  float a = readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
+  /*float a = readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
   if (a < 0) return 0;
   
-  return a;
+  return a;*/
 }
 
 NodeInfo* Node::getNodeInfo() {
@@ -116,7 +116,7 @@ void Node::NodeSetup(){
   // For consensus (initialise variables)
   for(int j = 0; j < ndev; j++){
     d1_m += pow(k[j], 2);
-    k[j] = 0;
+    //k[j] = 0;
     d_best[j] = 0;
     y[j] = 0;
     d_avg[j] = 0;
@@ -131,7 +131,7 @@ void Node::NodeSetup(){
 
 bool Node::calib() {
 
-  if(iter == 1) NodeSetup();
+  if(iter == ndev) NodeSetup();
 
   setPWM(0);
   float oj, lj;
@@ -258,29 +258,30 @@ void Node::checkSolution() {
 void Node::getCopy() {
 
   float d_out_matrix[MAX_LUM-1][MAX_LUM];
-  float d_str[MAX_LUM];
+  char* d_str[MAX_LUM];
+  float d_out[MAX_LUM];
 
   int x;
 
-  Serial.print("Received: ");
+  //Serial.print("Received: ");
   for(int j = 0; j < ndev-1; j++){
-    Serial.println(consensus_data[j].c_str());
+    //Serial.println(consensus_data[j].c_str());
 
     String aux_str = consensus_data[j];
     char* token = strtok((char*)aux_str.c_str(), "/");
 
     x = 0;
-    if (token != NULL) d_str[x]; 
+    if (token != NULL) d_str[x] = token; 
     ++x;
     while(token != NULL){
       token = strtok(NULL, "/");
-      d_str[x];
+      d_str[x] = token;
       ++x;
     }
 
     for(int k = 0; k < ndev; k++){
       d_out_matrix[j][k] = atof(d_str[k]);
-      d_str[k] = 0;
+      d_str[k] = NULL;
     } 
 
   }
@@ -289,13 +290,12 @@ void Node::getCopy() {
   for(int n = 0; n < ndev; n++){
     sum = 0;
     for(int m = 0; m < ndev-1; m++){
-      Serial.println(d_out_matrix[m][n]);
+      //Serial.println(d_out_matrix[m][n]);
       sum += d_out_matrix[m][n];
     }
 
     d_out[n] = sum;
   }
-
 }
 
 void Node::sendCopy() {
@@ -305,13 +305,13 @@ void Node::sendCopy() {
 
   msgBroadcast('c', str);
  
-  Serial.print("Sent: ");
-  Serial.println(str.c_str());
+  //Serial.print("Sent: ");
+  //Serial.println(str.c_str());
 }
 
 void Node::initConsensus() {
 
-  //k[0] = 2; k[1] = 0.5;
+  //k[addr-1] = 2; k[0] = 0.5;
   consensusCheck = false;
   int j;
   //Lcon = L; // update lux reference
@@ -325,12 +325,14 @@ void Node::initConsensus() {
     consensus_data[j] = "";
   }
 
+  o = 0;
   //while(!consensus_data.empty())  consensus_data.pop_back();
 }
 
 void Node::consensusAlgorithm() {
 
   all_copies = false;
+  Serial.println(iter_consensus);
 
   //L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o;
 
@@ -349,11 +351,11 @@ void Node::consensusAlgorithm() {
   /*float a = abs(extIlluminance() - o);
     Serial.println(a);*/
 
-  if (iter_consensus > 20) {
-    o = extIlluminance();
+  /*if (iter_consensus > 20) {
+    //o = extIlluminance();
     consensusCheck = true;
     return;
-  }
+  }*/
 
   //unsigned long init = micros();
   float rho_inv = 1.0 / rho;
@@ -369,7 +371,7 @@ void Node::consensusAlgorithm() {
       continue;
     }
 
-    z[j] = rho*d_avg[j];    
+    z[j] = rho*d_avg[j] - y[j];    
   } 
 
   // Unconstrained minimum
@@ -424,19 +426,18 @@ void Node::consensusAlgorithm() {
 
   /*Serial.println(d_best[0]);
   Serial.println(d_best[1]);*/
-
   sendCopy();
-  /*while(!all_copies);
+  while(!all_copies);
   all_copies = false;
-  getCopy();*/
+  getCopy();
 
-  /*for(j = 0; j < ndev; j++){   
+  for(j = 0; j < ndev; j++){   
     d_avg[j] = (d_best[j] + d_out[j]) / ndev; // Average solutions from all nodes
     y[j] += rho*(d_best[j] - d_avg[j]); // Dual update -> Update the Lagrangian Multipliers
   }
 
   L_ref = k[addr-1]*d_best[addr-1];
-  ++iter_consensus;*/
+  ++iter_consensus;
   
   /*unsigned long finish = micros() - init;
     Serial.println(finish);*/

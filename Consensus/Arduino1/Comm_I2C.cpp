@@ -2,6 +2,7 @@
 
 volatile bool Comm_I2C::sync;
 int Comm_I2C::ndev = 1;
+int Comm_I2C::consensus_cnt = 0;
 
 Comm_I2C::Comm_I2C(int _addr) {
   addr = _addr;
@@ -13,20 +14,25 @@ Comm_I2C::Comm_I2C(int _addr) {
 
 void Comm_I2C::msgAnalyse(char id, String data_str) {
 
-  Serial.println(id);
-
-  int cnt = 0;
+  //Serial.println(id);
 
   switch (id) {
     case 'c':
-      for(int j = 0; j < ndev-1; j++){
+      //Serial.println(consensus_cnt);
+      consensus_data[consensus_cnt] = data_str;
+      //Serial.println(consensus_data[consensus_cnt]);
+      consensus_cnt++;
+      /*for(int j = 0; j < ndev-1; j++){
         if(consensus_data[j] == ""){
           consensus_data[j] = data_str;
           cnt++;
-          //Serial.println(consensus_data[j].c_str());
+          Serial.println(consensus_data[j].c_str());
         }       
+      }*/
+      if(consensus_cnt == ndev-1){
+        all_copies = true;
+        consensus_cnt = 0;
       }
-      if(cnt == 0) all_copies = true;
       break;
 
     case 'n':
