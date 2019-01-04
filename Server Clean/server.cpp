@@ -116,7 +116,7 @@ tcp_connection::handle_read(const boost::system::error_code &error, size_t bytes
         message_ = "b l " + std::to_string(node) + "\n";
         
         while ( (time_count = std::chrono::duration_cast<std::chrono::seconds>(now - db->buff[node].illum[k].timestamp).count()) < 60){
-          //message_ += "sb = " +  std::to_string(time_count) + ", Value = ";
+          message_ += "sb = " +  std::to_string(time_count) + ", Value = ";
           message_ += std::to_string(db->buff[node].illum[k].data) + ",\n";
           k++;
         }

@@ -45,6 +45,12 @@ public:
   float comfort_error[NODES];
   float comfort_flicker[NODES];
   std::string k;
+
+  // Flags used for stream
+  bool lflags[NODES];
+  bool dflags[NODES];  
+  bool new_lval[NODES];
+  bool new_dval[NODES];
 };
 
 #endif
