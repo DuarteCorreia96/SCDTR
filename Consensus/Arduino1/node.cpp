@@ -1,5 +1,4 @@
 #include "node.h"
-#include "math.h"
 
 volatile bool Node::consensusCheck = false;
 int Node::iter_consensus = 1;
@@ -23,9 +22,9 @@ Node::Node(const float _m, const float _b, int _addr, float _c, float _rho) {
   iter = 1;
   L_desk = 0;
   L_ref = 0;
-  d_avg[0] = 0; d_avg[1] = 0;
+  /*d_avg[0] = 0; d_avg[1] = 0;
   d_best[0] = 0; d_avg[1] = 0;
-  d_out[0] = 0; d_out[1] = 0;
+  d_out[0] = 0; d_out[1] = 0;*/
   //d[0] = 0; d[1] = 0;
 }
 
@@ -102,8 +101,8 @@ void Node::setLux(float _L) {
 
 void Node::NodeSetup(){
 
-  float dummy_array[MAX_LUMM];
-  String dummy_str_array[MAX_LUMM-1];
+  /*float dummy_array[MAX_LUM];
+  String dummy_str_array[MAX_LUM-1];
   
   k.setStorage(dummy_array);
   d_best.setStorage(dummy_array);
@@ -112,7 +111,7 @@ void Node::NodeSetup(){
   d_test.setStorage(dummy_array);
   d_out.setStorage(dummy_array);
   z.setStorage(dummy_array);
-  consensus_data.setStorage(dummy_str_array);
+  consensus_data.setStorage(dummy_str_array);*/
 
   // For consensus (initialise variables)
   for(int j = 0; j < ndev; j++){
@@ -124,7 +123,6 @@ void Node::NodeSetup(){
     d_test[j] = 0;
     d_out[j] = 0;
     z[j] = 0;
-    consensus_data[j] = "";
   }
 
   d1_n = d1_m - pow(k[addr-1], 2);
@@ -181,8 +179,8 @@ bool Node::calib() {
 
     msgSync(iter);
     setPWM(0);
-
-    while(!calib_flag);  
+    
+    while(!calib_flag);    
     delay(500);
     ++iter;
     calib();
@@ -259,31 +257,44 @@ void Node::checkSolution() {
 
 void Node::getCopy() {
 
-  /*char d21_str[8];
-  char d22_str[8];*/
+  float d_out_matrix[MAX_LUM-1][MAX_LUM];
+  float d_str[MAX_LUM];
+
+  int x;
 
   Serial.print("Received: ");
-  for(int j = 0; j < ndev-1; j++)
+  for(int j = 0; j < ndev-1; j++){
     Serial.println(consensus_data[j].c_str());
 
-  /*String aux_str = consensus_data;
-  char* token = strtok((char*)aux_str.c_str(), "/");
+    String aux_str = consensus_data[j];
+    char* token = strtok((char*)aux_str.c_str(), "/");
 
-  if (token != NULL) strcpy(d21_str, token);
-  token = strtok(NULL, "/");
-  if (token != NULL) strcpy(d22_str, token);
+    x = 0;
+    if (token != NULL) d_str[x]; 
+    ++x;
+    while(token != NULL){
+      token = strtok(NULL, "/");
+      d_str[x];
+      ++x;
+    }
 
-  float d_aux[2];
-  d_aux[0] = atof(d21_str);
-  d_aux[1] = atof(d22_str);
+    for(int k = 0; k < ndev; k++){
+      d_out_matrix[j][k] = atof(d_str[k]);
+      d_str[k] = 0;
+    } 
 
-  /*Serial.println(d_aux[0]);
-    Serial.println(d_aux[1]);*/
+  }
 
-  /*d_out[0] = d_aux[0];
-  d_out[1] = d_aux[1];*/
+  float sum;
+  for(int n = 0; n < ndev; n++){
+    sum = 0;
+    for(int m = 0; m < ndev-1; m++){
+      Serial.println(d_out_matrix[m][n]);
+      sum += d_out_matrix[m][n];
+    }
 
-  //consensus_data = "";
+    d_out[n] = sum;
+  }
 
 }
 
@@ -292,7 +303,7 @@ void Node::sendCopy() {
   String str = floatToString(d_best[0]);
   for(int j = 1; j < ndev; j++) str += ("/" + floatToString(d_best[j]));
 
-  msgBroadcast(1, str);
+  msgBroadcast('c', str);
  
   Serial.print("Sent: ");
   Serial.println(str.c_str());
@@ -311,21 +322,10 @@ void Node::initConsensus() {
     d_avg[j] = 0;
     d_test[j] = 0;
     z[j] = 0;
-    //consensus_data[j] = "";
+    consensus_data[j] = "";
   }
 
-  o = extIlluminance(); // Update external illuminance estimate
-  //Serial.println(o);
-
-  //consensus_data = "";
-
-  /*d_avg[0] = (d_best[0] + d_out[0]) / 2;
-  d_avg[1] = (d_best[1] + d_out[1]) / 2;*/
-
-  /*for(j = 1; j <= ndev; j++){
-    if(j == addr) continue;
-    msgSync(j);
-  }*/ 
+  //while(!consensus_data.empty())  consensus_data.pop_back();
 }
 
 void Node::consensusAlgorithm() {
@@ -426,9 +426,9 @@ void Node::consensusAlgorithm() {
   Serial.println(d_best[1]);*/
 
   sendCopy();
-  while(!all_copies);
+  /*while(!all_copies);
   all_copies = false;
-  getCopy();
+  getCopy();*/
 
   /*for(j = 0; j < ndev; j++){   
     d_avg[j] = (d_best[j] + d_out[j]) / ndev; // Average solutions from all nodes

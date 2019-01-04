@@ -12,7 +12,7 @@
 const byte mask = B11111000;
 int prescale = 1;
 
-// Loop flags and interface with the user
+// Loop flags and interface with the user (change their names...)
 volatile bool flag2 = false;
 volatile bool flag3 = false;
 char v_read;
@@ -24,7 +24,6 @@ float m = 0;
 float b = 0;
 int c = 1;
 
-int hello_cnt = 0;
 Node *n1_p;
 
 void setup() {
@@ -52,9 +51,9 @@ void setup() {
   Serial.println("Calibration complete");
   delay(1000);
 
-  //n1_p->setLux(LOWB); // Set lux at lower bound (50 lx)
-  //n1_p->initConsensus();
-  //n1_p->consensusAlgorithm();
+  n1_p->setLux(LOWB); // Set lux reference at lower bound (50 lx)
+  n1_p->initConsensus();
+  n1_p->consensusAlgorithm();
   //n1_p->setupint_1();*/
 
 }
@@ -99,7 +98,7 @@ void receiveEvent(int howMany) {
     }
 
     id = c; // not a sync message
-    //Serial.println(id);
+    //Serial.println(c);
   }
 
   while (Wire.available() > 0) {

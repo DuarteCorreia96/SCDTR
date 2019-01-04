@@ -2,14 +2,13 @@
 #define _NODE_H
 
 #include <math.h>
-#include "Vector.h"
+//#include "Vector.h"
 #include "Comm_I2C.h"
 #include <Arduino.h>
 #include <string.h>
 
 #define COST_BEST 1000000
 #define MAX_LUMM 5
-
 
 class Node : public Comm_I2C {
 
@@ -21,12 +20,18 @@ class Node : public Comm_I2C {
     float L_ref;
     float c;
     float rho;
-    Vector<float> y;
+    /*Vector<float> y;
     Vector<float> d_avg;
     Vector<float> d_best;
     Vector<float> d_test;
     Vector<float> d_out;
-    Vector<float> z;
+    Vector<float> z;*/
+    float y[MAX_LUM];
+    float d_avg[MAX_LUM];
+    float d_best[MAX_LUM];
+    float d_test[MAX_LUM];
+    float d_out[MAX_LUM];
+    float z[MAX_LUM];
     float cost_best;
     float d1_m;
     float d1_n;
@@ -61,8 +66,8 @@ class Node : public Comm_I2C {
     float L;
     float m;
     float b;
-    Vector<float> k;
-    //float k[2];
+    //Vector<float> k;
+    float k[MAX_LUM];
     float o;
     //float* d;
     /*const int ledPin = 11;

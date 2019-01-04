@@ -13,17 +13,20 @@ Comm_I2C::Comm_I2C(int _addr) {
 
 void Comm_I2C::msgAnalyse(char id, String data_str) {
 
-  //Serial.println(id);
+  Serial.println(id);
+
+  int cnt = 0;
 
   switch (id) {
     case 'c':
-      consensus_data.push_back(data_str);
       for(int j = 0; j < ndev-1; j++){
-        //if(consensus_data[j] == "")  return;
-        //Serial.println(consensus_data[j]);
+        if(consensus_data[j] == ""){
+          consensus_data[j] = data_str;
+          cnt++;
+          //Serial.println(consensus_data[j].c_str());
+        }       
       }
-      return;
-      all_copies = true;
+      if(cnt == 0) all_copies = true;
       break;
 
     case 'n':
@@ -93,7 +96,7 @@ void Comm_I2C::findNodes(){
     }  
   }*/
 
-  for(int address = 1; address < 127; address++){
+  for(int address = 1; address < MAX_LUM; address++){
 
     if(address == addr)  continue;
 

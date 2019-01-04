@@ -5,10 +5,12 @@
 #include <Arduino.h>
 #include "Vector.h"
 #define BROADCAST_ADDR 0
-#define RASP_ADDR 4
-#define OTHER_ADDR 2
+//#define RASP_ADDR 4
+//#define OTHER_ADDR 2
 #define LOWB 50
 #define UPPB 150
+
+#define MAX_LUM 5 // Choose max number of luminaries accordingly!!
 
 class Comm_I2C {
 
@@ -21,7 +23,8 @@ class Comm_I2C {
     uint8_t addr;
     static int ndev;
     String floatToString(float num);
-    Vector<String> consensus_data;
+    //Vector<String> consensus_data;
+    String consensus_data[MAX_LUM-1];
     bool calib_flag;
     bool all_copies;
 
