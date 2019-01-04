@@ -1,7 +1,7 @@
 #include "Comm_I2C.h"
 
 volatile bool Comm_I2C::sync;
-//int Comm_I2C::iter;
+int Comm_I2C::ndev = 1;
 
 Comm_I2C::Comm_I2C(int _addr) {
   addr = _addr;
@@ -13,15 +13,28 @@ Comm_I2C::Comm_I2C(int _addr) {
 
 void Comm_I2C::msgAnalyse(char id, String data_str) {
 
+  Serial.println(id);
+
+  int cnt = 0;
+
   switch (id) {
-    case 1:
-      //Serial.println("Consensus Flag -> T");
-      consensus_flag = true;
-      consensus_data = data_str;
+    case 'c':
+      for(int j = 0; j < ndev-1; j++){
+        if(consensus_data[j] == ""){
+          consensus_data[j] = data_str;
+          cnt++;
+          //Serial.println(consensus_data[j].c_str());
+        }       
+      }
+      if(cnt == 0) all_copies = true;
       break;
 
-    case 2:
+    case 'n':
       calib_flag = true;
+      break;
+
+    case 'h':
+      hello_flag = true;
       break;
 
     default:
@@ -36,8 +49,7 @@ int Comm_I2C::msgSend(char id, int dest_addr, String data_str) {
   Wire.write(id);
   Wire.write(addr);
   Wire.write(data_str.c_str());
-
-  return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
+  return Wire.endTransmission(); // Returns 0 if the msg was sent successfully (source of problems, sometimes the program hangs here!)
 
 }
 
@@ -54,24 +66,50 @@ void Comm_I2C::msgBroadcast(char id, String data_str) {
   //return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
 }
 
+void Comm_I2C::sayHi(){
+
+  msgBroadcast('h',"");
+      
+  unsigned long init = micros();
+  while(micros() - init < 5000000){
+    if(hello_flag){
+      hello_flag = false;
+      init = micros();
+    }  
+  }
+  
+}
+
+
 
 void Comm_I2C::findNodes(){
-  
-  int error;
-  int _ndev = 0;
-  
-  for(int address = 1; address < 127; address++){
 
-    if(address == RASP_ADDR)  continue;
+  int _ndev = 0;
+  int error;
+  
+  /*unsigned long init = micros();
+  while(micros() - init < 5000000){
+    if(hello_flag){
+      hello_flag = false;
+      _ndev++;
+      //init = micros();
+    }  
+  }*/
+
+  for(int address = 1; address < MAX_LUM; address++){
+
+    if(address == addr)  continue;
 
     Wire.beginTransmission(address);
     Wire.write('x');
     error = Wire.endTransmission();
-    // The data was sent successfully
-    if (error == 0){
-      Serial.println(address);
-      _ndev++;
-    } 
+
+    // Addresses are assigned sequentially
+    if(error != 0)  break;
+    
+    Serial.println(address);
+    _ndev++;
+        
   }
 
   ndev = _ndev + 1;
@@ -100,7 +138,7 @@ void Comm_I2C::msgSync(int addr) {
   while (!sync) {
     //Serial.println(sync);
     //Wire.onReceive(msgSyncCallback);
-    delayMicroseconds(1500);
+    delayMicroseconds(2000);
     //Serial.println(sync);
     Wire.beginTransmission(addr);
     Wire.write('a');

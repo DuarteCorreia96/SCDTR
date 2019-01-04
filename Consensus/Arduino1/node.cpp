@@ -1,5 +1,4 @@
 #include "node.h"
-#include "math.h"
 
 volatile bool Node::consensusCheck = false;
 int Node::iter_consensus = 1;
@@ -23,9 +22,9 @@ Node::Node(const float _m, const float _b, int _addr, float _c, float _rho) {
   iter = 1;
   L_desk = 0;
   L_ref = 0;
-  d_avg[0] = 0; d_avg[1] = 0;
+  /*d_avg[0] = 0; d_avg[1] = 0;
   d_best[0] = 0; d_avg[1] = 0;
-  d_out[0] = 0; d_out[1] = 0;
+  d_out[0] = 0; d_out[1] = 0;*/
   //d[0] = 0; d[1] = 0;
 }
 
@@ -42,10 +41,13 @@ typedef struct NodeInfo {
 
 float Node::readIlluminance() {
 
+  const int R1 = 10000;
+  const int Vcc = 5;
+
   float v = readVoltage();
   /*Serial.println(v);
-    Serial.println(m);
-    Serial.println(b);*/
+  Serial.println(m);
+  Serial.println(b);*/
   float R2 = R1 * (Vcc - v) / v;
   float illuminance = pow(10, (log10(R2) - b) / m);
   return illuminance;
@@ -53,10 +55,13 @@ float Node::readIlluminance() {
 
 float Node::readVoltage() {
 
-  return 5 * analogRead(sensorPin) / 1023.0;
+  int analogPin = A0;
+  return 5 * analogRead(analogPin) / 1023.0;
 }
 
 bool Node::setPWM(int PWM) {
+
+  int ledPin = 11;
 
   if (PWM < 0 || PWM > 255)
     return false;
@@ -96,18 +101,38 @@ void Node::setLux(float _L) {
 
 void Node::NodeSetup(){
 
-  k = new float[ndev];
-  d_best = new float[ndev];
-  y = new float[ndev];
-  d_avg = new float[ndev];
-  d_best = new float[ndev];
-  d_out = new float[ndev];
+  /*float dummy_array[MAX_LUM];
+  String dummy_str_array[MAX_LUM-1];
+  
+  k.setStorage(dummy_array);
+  d_best.setStorage(dummy_array);
+  y.setStorage(dummy_array);
+  d_avg.setStorage(dummy_array);
+  d_test.setStorage(dummy_array);
+  d_out.setStorage(dummy_array);
+  z.setStorage(dummy_array);
+  consensus_data.setStorage(dummy_str_array);*/
+
+  // For consensus (initialise variables)
+  for(int j = 0; j < ndev; j++){
+    d1_m += pow(k[j], 2);
+    k[j] = 0;
+    d_best[j] = 0;
+    y[j] = 0;
+    d_avg[j] = 0;
+    d_test[j] = 0;
+    d_out[j] = 0;
+    z[j] = 0;
+  }
+
+  d1_n = d1_m - pow(k[addr-1], 2);
+
 }
 
 bool Node::calib() {
 
   if(iter == 1) NodeSetup();
-  
+
   setPWM(0);
   float oj, lj;
   calib_flag = false;
@@ -115,18 +140,17 @@ bool Node::calib() {
   if (iter > ndev) return true;
 
   if (iter == addr) {
-
+    
     o = readIlluminance();
     delay(500);
-
+    
     setPWM(255);
     delay(500);
     float x_max = readIlluminance();
-    k[addr-1] = (x_max - o) / 100;
+    k[addr-1] = (x_max - o) / 100.0;
     Serial.println(k[addr-1]);
 
     setPWM(0);
-    //msgSync();
     delay(500);
 
     for(int j = 1; j <= ndev; j++){
@@ -139,11 +163,11 @@ bool Node::calib() {
       lj = readIlluminance();
       msgSync(j);
 
-      k[j-1] = (lj - oj) / 100;
+      k[j-1] = (lj - oj) / 100.0;
       Serial.println(k[j-1]);
     }
 
-    msgBroadcast(2,"");
+    msgBroadcast('n',"");
     delay(500);
     ++iter;
     calib();
@@ -155,8 +179,8 @@ bool Node::calib() {
 
     msgSync(iter);
     setPWM(0);
-
-    while(!calib_flag);
+    
+    while(!calib_flag);    
     delay(500);
     ++iter;
     calib();
@@ -165,7 +189,7 @@ bool Node::calib() {
 
 const char* Node::getConsensusData() {
 
-  return consensus_data.c_str();
+  //return consensus_data.c_str();
 }
 
 int Node::msgConsensus(char id, int src_addr, String data_str) {
@@ -190,16 +214,19 @@ int Node::msgConsensus(char id, int src_addr, String data_str) {
 }
 
 
-bool Node::checkFeasibility(float d1, float d2) {
+bool Node::checkFeasibility() {
 
-  float tol = 0.001;
+  //float tol = 0.001;
 
-  if (d1 < 0 - tol || k[0]*d1 + k[1]*d2 < L - o - tol) {
+  float ill = 0;
+  for(int j = 0; j < ndev; j++) ill += k[j]*d_test[j];
+
+  if (d_test[addr-1] < 0 || ill < L - o) {
     max_act = false;
     return false;
   }
 
-  if (d1 > 100 + tol) {
+  if (d_test[addr-1] > 100) {
     max_act = true;
     return false;
   }
@@ -207,101 +234,105 @@ bool Node::checkFeasibility(float d1, float d2) {
   return true;
 }
 
-float Node::getCost(float d1, float d2) {
+float Node::getCost() {
 
-  return c * d1 + y[0] * (d1 - d_avg[0]) + y[1] * (d2 - d_avg[1]) + rho / 2 * (pow(d1 - d_avg[0], 2) + pow(d2 - d_avg[1], 2));
+  float cost = c*d_test[addr-1];
+  for(int j = 0; j < ndev; j++) cost += ( y[j] * (d_test[j] - d_avg[j]) + rho/2 * pow(d_test[j] - d_avg[j], 2) );
+
+  return cost;
 }
 
-void Node::checkSolution(float d1_test, float d2_test) {
+void Node::checkSolution() {
 
-  if (checkFeasibility(d1_test, d2_test)) {
+  if (checkFeasibility()) {
 
-    float cost = getCost(d1_test, d2_test);
+    float cost = getCost();
     if (cost < cost_best) {
 
       cost_best = cost;
-      d_best[0] = d1_test;
-      d_best[1] = d2_test;
+      for(int j = 0; j < ndev; j++) d_best[j] = d_test[j];
     }
   }
 }
 
 void Node::getCopy() {
 
-  char d21_str[8];
-  char d22_str[8];
+  float d_out_matrix[MAX_LUM-1][MAX_LUM];
+  float d_str[MAX_LUM];
 
-  //Serial.print("Received: ");
-  //Serial.println(consensus_data.c_str());
+  int x;
 
-  String aux_str = consensus_data;
-  char* token = strtok((char*)aux_str.c_str(), "/");
+  Serial.print("Received: ");
+  for(int j = 0; j < ndev-1; j++){
+    Serial.println(consensus_data[j].c_str());
 
-  if (token != NULL) strcpy(d21_str, token);
-  token = strtok(NULL, "/");
-  if (token != NULL) strcpy(d22_str, token);
+    String aux_str = consensus_data[j];
+    char* token = strtok((char*)aux_str.c_str(), "/");
 
-  float d_aux[2];
-  d_aux[0] = atof(d21_str);
-  d_aux[1] = atof(d22_str);
+    x = 0;
+    if (token != NULL) d_str[x]; 
+    ++x;
+    while(token != NULL){
+      token = strtok(NULL, "/");
+      d_str[x];
+      ++x;
+    }
 
-  /*Serial.println(d_aux[0]);
-    Serial.println(d_aux[1]);*/
+    for(int k = 0; k < ndev; k++){
+      d_out_matrix[j][k] = atof(d_str[k]);
+      d_str[k] = 0;
+    } 
 
-  d_out[0] = d_aux[0];
-  d_out[1] = d_aux[1];
+  }
 
-  consensus_data = "";
+  float sum;
+  for(int n = 0; n < ndev; n++){
+    sum = 0;
+    for(int m = 0; m < ndev-1; m++){
+      Serial.println(d_out_matrix[m][n]);
+      sum += d_out_matrix[m][n];
+    }
+
+    d_out[n] = sum;
+  }
 
 }
 
-void Node::sendCopy(float d1, float d2) {
+void Node::sendCopy() {
 
-  String str = floatToString(d2) + "/" + floatToString(d1);
-  msgSend(1, OTHER_ADDR, str);
+  String str = floatToString(d_best[0]);
+  for(int j = 1; j < ndev; j++) str += ("/" + floatToString(d_best[j]));
 
-  //Serial.print("Sent: ");
-  //Serial.println(str.c_str());
+  msgBroadcast('c', str);
+ 
+  Serial.print("Sent: ");
+  Serial.println(str.c_str());
 }
 
 void Node::initConsensus() {
 
   //k[0] = 2; k[1] = 0.5;
   consensusCheck = false;
-  Lcon = L; // update lux reference
-  d1_m = pow(k[0], 2) + pow(k[1], 2);
-  d1_n = d1_m - pow(k[0], 2);
-  o = extIlluminance(); // Update external illuminance estimate
-  //Serial.println(o);
-  y[0] = 0; // Lagrange Multipliers
-  y[1] = 0;
-  d_best[0] = 0;
-  d_best[1] = 0;
+  int j;
+  //Lcon = L; // update lux reference
+  
+  for(j = 0; j < ndev; j++){
+    y[j] = 0; 
+    d_out[j] = 0;
+    d_avg[j] = 0;
+    d_test[j] = 0;
+    z[j] = 0;
+    consensus_data[j] = "";
+  }
 
-  /*if (consensus_flag) {
-    delay(200);
-    d_out[1] = atof(consensus_data.c_str()); // get ref value from the other node
-    msgSend(2,OTHER_ADDR,floatToString(Lcon/k[0]));
-    } else {
-    msgSend(2,OTHER_ADDR,floatToString(Lcon/k[0]));
-    delay(200);
-    d_out[1] = atof(consensus_data.c_str()); // get ref value from the other node
-    }*/
-
-  consensus_data = "";
-
-  //d[0] = Lcon/k[0];
-  //Serial.println(d[0]);
-  //Serial.println(d[1]);
-  d_avg[0] = (d_best[0] + d_out[0]) / 2;
-  d_avg[1] = (d_best[1] + d_out[1]) / 2;
-
-  //msgSync();
+  //while(!consensus_data.empty())  consensus_data.pop_back();
 }
 
 void Node::consensusAlgorithm() {
 
-  L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o; // Value to be sent to the local controller
+  all_copies = false;
+
+  //L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o;
 
   /*Serial.println(L_desk);
   Serial.println(readIlluminance());
@@ -326,65 +357,87 @@ void Node::consensusAlgorithm() {
 
   //unsigned long init = micros();
   float rho_inv = 1.0 / rho;
-  float d1, d2;
+  int j = 0;
   cost_best = COST_BEST;
-  d_best[0] = -1;
-  d_best[1] = -1;
 
-  float z1 = rho * d_avg[0] - c - y[0];
-  float z2 = rho * d_avg[1] - y[1];
+  for(j = 0; j < ndev; j++){
+
+    d_best[j] = -1;
+
+    if(j == addr-1){
+      z[j] = rho*d_avg[j] - c - y[j];
+      continue;
+    }
+
+    z[j] = rho*d_avg[j];    
+  } 
 
   // Unconstrained minimum
-  d1 = rho_inv * z1;
-  d2 = rho_inv * z2;
-  //checkSolution(d1,d2);
+  for(j = 0; j < ndev; j++) d_test[j] = rho_inv*z[j];
+  checkSolution();
 
   // Solution in the DLB (Dimming lower bound)
-  d1 = 0;
-  d2 = rho_inv * z2;
-  checkSolution(d1, d2);
+  d_test[addr-1] = 0;
+  checkSolution();
 
   // Solution in the DUB (Dimming Upper Bound)
-  d1 = 100;
-  d2 = rho_inv * z2;
-  checkSolution(d1, d2);
+  d_test[addr-1] = 100;
+  checkSolution();
 
   // Solution in the ILB (Illuminance Lower Bound)
-  d1 = rho_inv * z1 - k[0] * (o - Lcon + rho_inv * (k[0] * z1 + k[1] * z2)) / d1_m;
-  d2 = rho_inv * z2 - k[1] * (o - Lcon + rho_inv * (k[0] * z1 + k[1] * z2)) / d1_m;
-  checkSolution(d1, d2);
+  float sum = 0;
+  for(j = 0; j < ndev; j++) sum += k[j]*z[j];
+
+  for(j = 0; j < ndev; j++) d_test[j] = ( rho_inv*z[j] - k[j]*(o - L + rho_inv*sum) / d1_m );
+  checkSolution();
 
   // Solution in the ILB & DLB
-  d1 = 0;
-  d2 = rho_inv * z2 - (k[1] * (o - Lcon) + rho_inv * k[1] * k[1] * z2) / d1_n;
-  checkSolution(d1, d2);
+  for(j = 0; j < ndev; j++){
+    if(j == addr-1){
+      d_test[j] = 0;
+      continue;
+    }
+
+    d_test[j] = rho_inv*z[j] - k[j]/d1_n * (o - L - rho_inv*(k[addr-1]*z[addr-1] - sum));
+  }
+  checkSolution();
 
   // Solution in the ILB & DUB
-  d1 = 100;
-  d2 = rho_inv * z2 - (k[1] * (o - Lcon) + 100 * k[1] * k[0] + rho_inv * k[1] * k[1] * z2) / d1_n;
-  checkSolution(d1, d2);
+  for(j = 0; j < ndev; j++){
+    if(j == addr-1){
+      d_test[j] = 100;
+      continue;
+    }
+
+    d_test[j] = rho_inv*z[j] - (k[j]*(o - L) + 100*k[j]*k[addr-1] - rho_inv*k[j]*(k[addr-1]*z[addr-1] - sum)) / d1_n;
+  }
+  checkSolution();
 
   if (max_act) { // Request Illuminance value above LED actuation, power everthing at max
-    d_best[0] = 100;
-    d_best[1] = 100;
+    for(j = 0; j < ndev; j++) d_best[j] = 100;
   }
 
-  //msgSync();
-  sendCopy(d_best[0], d_best[1]);
-  delay(5);
-  getCopy();
+  for(j = 1; j <= ndev; j++){
+    if(j == addr) continue;
+    msgSync(j);
+  } 
 
-  // Average solutions from all nodes
-  d_avg[0] = (d_best[0] + d_out[0]) / 2;
-  d_avg[1] = (d_best[1] + d_out[1]) / 2;
+  /*Serial.println(d_best[0]);
+  Serial.println(d_best[1]);*/
 
-  // Dual update -> Update the Lagrangian Multipliers
-  y[0] += rho * (d_best[0] - d_avg[0]);
-  y[1] += rho * (d_best[1] - d_avg[1]);
+  sendCopy();
+  /*while(!all_copies);
+  all_copies = false;
+  getCopy();*/
 
-  ++iter_consensus;
-  L_ref = k[0] * d_best[0];
+  /*for(j = 0; j < ndev; j++){   
+    d_avg[j] = (d_best[j] + d_out[j]) / ndev; // Average solutions from all nodes
+    y[j] += rho*(d_best[j] - d_avg[j]); // Dual update -> Update the Lagrangian Multipliers
+  }
 
+  L_ref = k[addr-1]*d_best[addr-1];
+  ++iter_consensus;*/
+  
   /*unsigned long finish = micros() - init;
     Serial.println(finish);*/
 
@@ -478,13 +531,13 @@ void Node::set_Brightness() {
   }*/
 
 void Node::Read_serial(char v_read) {
-  if (v_read == 'o') {
+  /*if (v_read == 'o') {
     Occu = !Occu;
     //iter_consensus = 1;
   }
 
   if(v_read == 'd'){
-    delete[] k;
+    /*delete[] k;
     delete[] d_best;
     delete[] y;
     delete[] d_avg;
@@ -494,7 +547,7 @@ void Node::Read_serial(char v_read) {
     Serial.println("Bye");
 
     while(1);
-  }
+  }*/
 }
 
 void Node::set_occupancy() {
