@@ -1,39 +1,31 @@
 #include "consensus.h"
 
+using namespace std;
+
 int main(){
 
-  const float m = -0.72;
-  const float b1 = 5.0840; 
-  const float b2 = 5.0170; 
-  float L = 150.0;  
+  const float c = 1;
+  float L1 = 70;
+  float L2 = 150; 
 
+  Consensus n1(c,L1,3.17,0.73);
+  Consensus n2(c,L2,3.16,0.56);
 
-//  float k1 = {2.12, 0.86};
-//  float k2 = {0.58, 1.55};
+  for(int j = 0; j < 20; j++){
 
-  Consensus n1(m,b1,1,1,L,2.12, 0.86);
-  Consensus n2(m,b2,2,1,L,0.58, 1.55);
-
-  float d_in[2] = {50,0};
-  n1.d_best[0] = d_in[0];
-  n2.d_best[1] = d_in[1];
-  
-  float d_out[2] = {0, 50};
-  n1.d_out[0] =  d_out[0];
-  n2.d_out[1]=  d_out[1];
-
-  float d_avg[2] = {25, 25};
-  n1.d_avg[0] = d_avg[0];
-  n2.d_avg[1] = d_avg[1];
-
-  for(int j = 0; j < 50; j++){
+    //cout << "Iter " << j << endl;
 
     n1.primal();
-    n1.consensus_update(n1.d_best, n2.d_best);
-    
-
     n2.primal();
-    n2.consensus_update(n2.d_best, n1.d_best);
+
+    n1.consensus_update(n2.d_out);   
+    n2.consensus_update(n1.d_out);
+
   }
+
+  cout << endl;
+  n1.printResults();
+  cout << endl;
+  n2.printResults();
 
 }
