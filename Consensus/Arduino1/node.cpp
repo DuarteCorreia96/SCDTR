@@ -73,10 +73,17 @@ bool Node::setPWM(int PWM) {
 
 float Node::extIlluminance() {
 
-  /*float a = readIlluminance() - k[0] * d_best[0] - k[1] * d_out[1];
-  if (a < 0) return 0;
+  msgBroadcast('a',floatToString(d_best[addr-1])); // Broadcast my duty-cycle to other nodes
+  d_ext[addr-1] = d_best[addr-1];
+  while(!calc_ext_ill); // Wait until every node sends me its duty-cycle
+  calc_ext_ill = false;
   
-  return a;*/
+  float a = readIlluminance();
+  for(int j = 0; j < ndev; j++) a -= k[j]*d_ext[j];
+
+  if (a < 0) return 0; // this condition should not be necessary!!
+  
+  return a;
 }
 
 NodeInfo* Node::getNodeInfo() {
@@ -112,7 +119,8 @@ void Node::NodeSetup(){
   d_out.setStorage(dummy_array);
   z.setStorage(dummy_array);
   consensus_data.setStorage(dummy_str_array);*/
-
+  
+  d1_m = 0;
   // For consensus (initialise variables)
   for(int j = 0; j < ndev; j++){
     d1_m += pow(k[j], 2);
@@ -131,15 +139,15 @@ void Node::NodeSetup(){
 
 bool Node::calib() {
 
-  if(iter == ndev) NodeSetup();
+  if(iter == ndev) NodeSetup(); // Initialise Consensus arrays
 
   setPWM(0);
   float oj, lj;
   calib_flag = false;
 
-  if (iter > ndev) return true;
+  if (iter > ndev) return true; // All nodes have finished their calibration
 
-  if (iter == addr) {
+  if (iter == addr) {  // It's my turn, I'm the master
     
     o = readIlluminance();
     delay(500);
@@ -148,7 +156,7 @@ bool Node::calib() {
     delay(500);
     float x_max = readIlluminance();
     k[addr-1] = (x_max - o) / 100.0;
-    Serial.println(k[addr-1]);
+    Serial.println(k[addr-1]); // My own gain
 
     setPWM(0);
     delay(500);
@@ -158,29 +166,29 @@ bool Node::calib() {
       if(j == addr) continue;
 
       oj = readIlluminance();
-      msgSync(j);
+      msgSync(j); // Request node j to light up its led at max power
       delay(500);
       lj = readIlluminance();
       msgSync(j);
 
       k[j-1] = (lj - oj) / 100.0;
-      Serial.println(k[j-1]);
+      Serial.println(k[j-1]); // Coupling gain with node j
     }
 
-    msgBroadcast('n',"");
+    msgBroadcast('n',""); // Finish, pass to the next node
     delay(500);
     ++iter;
     calib();
   }
-  else {
+  else { // Not my turn, I'm a slave, wait for master's requests
 
-    msgSync(iter);
-    setPWM(255);
+    msgSync(iter); 
+    setPWM(255); // Answer to the master's request
 
-    msgSync(iter);
+    msgSync(iter); // Master has got the info to compute the coupling gain, turn my led off
     setPWM(0);
     
-    while(!calib_flag);    
+    while(!calib_flag); // Wait that master finishes its calibration 
     delay(500);
     ++iter;
     calib();
@@ -216,17 +224,16 @@ int Node::msgConsensus(char id, int src_addr, String data_str) {
 
 bool Node::checkFeasibility() {
 
-  //float tol = 0.001;
+  float tol = 0.001;
 
   float ill = 0;
   for(int j = 0; j < ndev; j++) ill += k[j]*d_test[j];
 
-  if (d_test[addr-1] < 0 || ill < L - o) {
-    max_act = false;
-    return false;
-  }
+  max_act = false;
 
-  if (d_test[addr-1] > 100) {
+  if (d_test[addr-1] < 0 - tol || ill < L - o - tol)  return false;
+
+  if (d_test[addr-1] > 100 + tol) {
     max_act = true;
     return false;
   }
@@ -236,19 +243,28 @@ bool Node::checkFeasibility() {
 
 float Node::getCost() {
 
+  int diff;
+
   float cost = c*d_test[addr-1];
-  for(int j = 0; j < ndev; j++) cost += ( y[j] * (d_test[j] - d_avg[j]) + rho/2 * pow(d_test[j] - d_avg[j], 2) );
+  for(int j = 0; j < ndev; j++){
+    Serial.println(d_test[j]);
+    Serial.println(d_avg[j]);
+    diff = d_test[j] - d_avg[j];
+    cost += ( y[j]*diff + rho/2*diff*diff );
+  }
 
   return cost;
 }
 
-void Node::checkSolution() {
+void Node::checkSolution(int sol) {
 
   if (checkFeasibility()) {
-
+    //Serial.println(sol);
     float cost = getCost();
+    //Serial.println(cost);
     if (cost < cost_best) {
-
+      //Serial.println(cost_best);
+      Serial.println(sol);
       cost_best = cost;
       for(int j = 0; j < ndev; j++) d_best[j] = d_test[j];
     }
@@ -257,15 +273,14 @@ void Node::checkSolution() {
 
 void Node::getCopy() {
 
-  float d_out_matrix[MAX_LUM-1][MAX_LUM];
+  float d_out_matrix[MAX_LUM-1][MAX_LUM]; // Each line saves one d vector
   char* d_str[MAX_LUM];
-  float d_out[MAX_LUM];
 
   int x;
 
-  //Serial.print("Received: ");
+  Serial.print("Received: ");
   for(int j = 0; j < ndev-1; j++){
-    //Serial.println(consensus_data[j].c_str());
+    Serial.println(consensus_data[j].c_str());
 
     String aux_str = consensus_data[j];
     char* token = strtok((char*)aux_str.c_str(), "/");
@@ -282,11 +297,13 @@ void Node::getCopy() {
     for(int k = 0; k < ndev; k++){
       d_out_matrix[j][k] = atof(d_str[k]);
       d_str[k] = NULL;
-    } 
+    }
+
+    consensus_data[j] = ""; 
 
   }
 
-  float sum;
+  float sum; // Sum all d vectors received
   for(int n = 0; n < ndev; n++){
     sum = 0;
     for(int m = 0; m < ndev-1; m++){
@@ -305,28 +322,29 @@ void Node::sendCopy() {
 
   msgBroadcast('c', str);
  
-  //Serial.print("Sent: ");
-  //Serial.println(str.c_str());
+  Serial.print("Sent: ");
+  Serial.println(str.c_str());
 }
 
 void Node::initConsensus() {
 
   //k[addr-1] = 2; k[0] = 0.5;
   consensusCheck = false;
-  int j;
   //Lcon = L; // update lux reference
   
-  for(j = 0; j < ndev; j++){
+  for(int j = 0; j < ndev; j++){
     y[j] = 0; 
     d_out[j] = 0;
     d_avg[j] = 0;
-    d_test[j] = 0;
+    //d_test[j] = 0;
     z[j] = 0;
     consensus_data[j] = "";
   }
 
   o = 0;
-  //while(!consensus_data.empty())  consensus_data.pop_back();
+  /*o = extIlluminance();
+  Serial.println(o);
+  delay(1000);*/
 }
 
 void Node::consensusAlgorithm() {
@@ -351,11 +369,11 @@ void Node::consensusAlgorithm() {
   /*float a = abs(extIlluminance() - o);
     Serial.println(a);*/
 
-  /*if (iter_consensus > 20) {
-    //o = extIlluminance();
+  if (iter_consensus > 20) {
+    o = extIlluminance();
     consensusCheck = true;
     return;
-  }*/
+  }
 
   //unsigned long init = micros();
   float rho_inv = 1.0 / rho;
@@ -372,26 +390,29 @@ void Node::consensusAlgorithm() {
     }
 
     z[j] = rho*d_avg[j] - y[j];    
-  } 
+  }
+
+  //Serial.println(z[0]);
+  //Serial.println(z[1]);
 
   // Unconstrained minimum
   for(j = 0; j < ndev; j++) d_test[j] = rho_inv*z[j];
-  checkSolution();
+  checkSolution(1);
 
   // Solution in the DLB (Dimming lower bound)
   d_test[addr-1] = 0;
-  checkSolution();
+  checkSolution(2);
 
   // Solution in the DUB (Dimming Upper Bound)
   d_test[addr-1] = 100;
-  checkSolution();
+  checkSolution(3);
 
   // Solution in the ILB (Illuminance Lower Bound)
   float sum = 0;
   for(j = 0; j < ndev; j++) sum += k[j]*z[j];
 
-  for(j = 0; j < ndev; j++) d_test[j] = ( rho_inv*z[j] - k[j]*(o - L + rho_inv*sum) / d1_m );
-  checkSolution();
+  for(j = 0; j < ndev; j++) d_test[j] = rho_inv*z[j] - k[j]*(o - L + rho_inv*sum) / d1_m;
+  checkSolution(4);
 
   // Solution in the ILB & DLB
   for(j = 0; j < ndev; j++){
@@ -402,7 +423,7 @@ void Node::consensusAlgorithm() {
 
     d_test[j] = rho_inv*z[j] - k[j]/d1_n * (o - L - rho_inv*(k[addr-1]*z[addr-1] - sum));
   }
-  checkSolution();
+  checkSolution(5);
 
   // Solution in the ILB & DUB
   for(j = 0; j < ndev; j++){
@@ -413,7 +434,10 @@ void Node::consensusAlgorithm() {
 
     d_test[j] = rho_inv*z[j] - (k[j]*(o - L) + 100*k[j]*k[addr-1] - rho_inv*k[j]*(k[addr-1]*z[addr-1] - sum)) / d1_n;
   }
-  checkSolution();
+  checkSolution(6);
+
+  //Serial.println(d_best[0]);
+  //Serial.println(d_best[1]);
 
   if (max_act) { // Request Illuminance value above LED actuation, power everthing at max
     for(j = 0; j < ndev; j++) d_best[j] = 100;
@@ -423,13 +447,14 @@ void Node::consensusAlgorithm() {
     if(j == addr) continue;
     msgSync(j);
   } 
-
-  /*Serial.println(d_best[0]);
-  Serial.println(d_best[1]);*/
+  
   sendCopy();
-  while(!all_copies);
+  while(!all_copies); // Wait until every node sends its local copy of d vector
   all_copies = false;
   getCopy();
+
+  //Serial.println(d_out[0]);
+  //Serial.println(d_out[1]);
 
   for(j = 0; j < ndev; j++){   
     d_avg[j] = (d_best[j] + d_out[j]) / ndev; // Average solutions from all nodes
@@ -478,15 +503,15 @@ void Node::PID() {
   //Serial.print(e);
   //Serial.print("\t");
   float p = k1 * e;                       // porpotional term
-  float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(u);    // integal term
+  float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(usat);    // integal term
   //float i = i_ant + (e    + e_ant);     // integal term
   if (abs(e) < 0.5)
     p = 0;
 
-  float u = p + i + des_brightness / k[0];     // add feed-forward term
+  float u = p + i + des_brightness / k[addr-1];     // add feed-forward term
 
   u = constrain(u, 0, 100);
-
+  usat = u;
   setPWM(map(u, 0, 100, 0, 255));
   //Serial.println(u);
   i_ant = i;

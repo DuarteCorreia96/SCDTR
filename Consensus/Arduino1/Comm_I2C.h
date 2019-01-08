@@ -7,8 +7,6 @@
 #define BROADCAST_ADDR 0
 //#define RASP_ADDR 4
 //#define OTHER_ADDR 2
-#define LOWB 50
-#define UPPB 150
 
 #define MAX_LUM 5 // Choose max number of luminaries accordingly!!
 
@@ -20,7 +18,7 @@ class Comm_I2C {
     static int consensus_cnt;
 
   protected:
-    float u2 = 0;
+    //float u2 = 0;
     uint8_t addr;
     static int ndev;
     String floatToString(float num);
@@ -28,6 +26,8 @@ class Comm_I2C {
     String consensus_data[MAX_LUM-1];
     volatile bool calib_flag;
     volatile bool all_copies;
+    volatile bool calc_ext_ill = false;
+    float d_ext[MAX_LUM];
 
   public:
 
@@ -36,7 +36,7 @@ class Comm_I2C {
     Comm_I2C(int addr);
     //~Comm_I2C();
     int getAddr() const;
-    void msgAnalyse(char id, String data_str);
+    void msgAnalyse(char id, int src, String data_str);
     void msgBroadcast(char id, String data_str);
     int msgSend(char id, int dest_addr, String data_str);
     void msgSync(int addr);

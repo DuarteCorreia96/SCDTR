@@ -12,7 +12,7 @@ Comm_I2C::Comm_I2C(int _addr) {
   u2 = _u2;
 }*/
 
-void Comm_I2C::msgAnalyse(char id, String data_str) {
+void Comm_I2C::msgAnalyse(char id, int src, String data_str) {
 
   //Serial.println(id);
 
@@ -21,15 +21,8 @@ void Comm_I2C::msgAnalyse(char id, String data_str) {
       //Serial.println(consensus_cnt);
       consensus_data[consensus_cnt] = data_str;
       //Serial.println(consensus_data[consensus_cnt]);
-      consensus_cnt++;
-      /*for(int j = 0; j < ndev-1; j++){
-        if(consensus_data[j] == ""){
-          consensus_data[j] = data_str;
-          cnt++;
-          Serial.println(consensus_data[j].c_str());
-        }       
-      }*/
-      if(consensus_cnt == ndev-1){
+      ++consensus_cnt;      
+      if(consensus_cnt == ndev-1){ // Copies of d vector from all other nodes received
         all_copies = true;
         consensus_cnt = 0;
       }
@@ -41,6 +34,15 @@ void Comm_I2C::msgAnalyse(char id, String data_str) {
 
     case 'h':
       hello_flag = true;
+      break;
+
+    case 'a':
+      /*d_ext[src-1] = atof(data_str.c_str());
+      ++consensus_cnt;
+      if(consensus_cnt == ndev-1) {
+        calc_ext_ill = true;
+        consensus_cnt = 0;
+      }*/
       break;
 
     default:
@@ -67,7 +69,7 @@ void Comm_I2C::msgBroadcast(char id, String data_str) {
   Wire.write(addr + 48);
   Wire.write(data_str.c_str());*/
 
-  msgSend(id, 0, data_str);
+  msgSend(id, BROADCAST_ADDR, data_str);
 
   //return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
 }
