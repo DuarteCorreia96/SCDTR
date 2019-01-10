@@ -47,7 +47,7 @@ void data_storage::update_after_duty(int node){
   else
     last = last_restart;
 
-  energy_coms[node] += inst_power[node] * std::chrono::duration_cast<std::chrono::milliseconds>(now - last).count()/1000;
+  energy_coms[node] += inst_power[node] * std::chrono::duration_cast<std::chrono::microseconds>(now - last).count()/1e6;
 }
 
 void  data_storage::update_after_illum(int node){
@@ -58,13 +58,13 @@ void  data_storage::update_after_illum(int node){
 
   if (buff[node].illum.size() > 3){
 
-    float time_st_dc = std::chrono::duration_cast<std::chrono::milliseconds>(buff[node].illum[0].timestamp - buff[node].illum[1].timestamp).count();
+    float time_st_dc = std::chrono::duration_cast<std::chrono::microseconds>(buff[node].illum[0].timestamp - buff[node].illum[1].timestamp).count();
     if ((buff[node].illum[0].data - buff[node].illum[1].data) * 
         (buff[node].illum[1].data - buff[node].illum[2].data) < 0){
 
       comfort_flicker[node] +=  abs(buff[node].illum[0].data - buff[node].illum[1].data) +
                                 abs(buff[node].illum[1].data - buff[node].illum[2].data) /
-                                (2 * time_st_dc / 1000);
+                                (2 * time_st_dc / 1e6);
     } else {
       comfort_flicker[node] += 0;
     }
