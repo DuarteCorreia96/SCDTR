@@ -52,20 +52,21 @@ void setup() {
   delay(1000);
 
   //n1_p->setLux(LOWB); // Set lux reference at lower bound (50 lx)
-  n1_p->setLux(100);
+  n1_p->setLux(250);
   n1_p->initConsensus();
-  /*while(1){
+  while(1){
+    //Serial.println('a');
     n1_p->consensusAlgorithm();
-    //delay(200); // Add delay to analyse Consensus results (else, the program crashes w/ Serial prints)
-  }*/
+    delay(500); // Add delay to analyse Consensus results (else, the program crashes w/ Serial prints)
+  }
   //n1_p->setupint_1();
 
 }
 
 void loop() {
  
-  n1_p->consensusAlgorithm();
-  delay(200);
+  //n1_p->consensusAlgorithm();
+  //delay(200);
   /*n1_p->set_occupancy();
 
   n1.consensusAlgorithm();
@@ -118,7 +119,7 @@ void receiveEvent(int howMany) {
       
     }
     //Serial.write('\n');
-    n1_p->msgAnalyse(id, data_str);
+    n1_p->msgAnalyse(id, src_addr, data_str);
   }
 }
 

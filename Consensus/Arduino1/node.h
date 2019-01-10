@@ -8,6 +8,8 @@
 #include <string.h>
 
 #define COST_BEST 1000000
+#define LOWB 50
+#define UPPB 150
 
 class Node : public Comm_I2C {
 
@@ -35,7 +37,7 @@ class Node : public Comm_I2C {
     float d1_m;
     float d1_n;
     bool checkFeasibility();
-    void checkSolution();
+    void checkSolution(int sol);
     float getCost();
     void getCopy();
     void sendCopy();
@@ -51,6 +53,8 @@ class Node : public Comm_I2C {
     float usat = 0;
     float des_brightness;
     float Windup(float u);
+
+    float usat;
 
     void NodeSetup();
 
