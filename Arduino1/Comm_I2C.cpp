@@ -26,7 +26,7 @@ void Comm_I2C::msgAnalyse(char id, int src, String data_str) {
       hello_flag = true;
       break;
 
-    case 'a':
+    case 'k':
       restartConsensus = true;
       break;
 

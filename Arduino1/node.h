@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define COST_BEST 1000000
-#define LOWB 50
+#define LOWB 75
 #define UPPB 150
 
 class Node : public Comm_I2C {
@@ -16,7 +16,7 @@ class Node : public Comm_I2C {
     float pwm_val;
     float u = 0;
     float L_desk;
-    float L_ref;
+    volatile float L_ref;
     float c;
     float rho;
     float y[MAX_LUM];
@@ -33,17 +33,13 @@ class Node : public Comm_I2C {
     float getCost();
     void getCopy();
     void sendCopy();
-    float Lcon;
-    float k1 = 0.01575;
-    float k2 = 0.00945;
-    float ki = 0.0342;
-    float kwdp = 0.034;
-    float T = 35.0877;
+    const float k1 = 0.01575;
+    const float k2 = 0.00945;
+    const float kwdp = 0.034;
     float i_ant = 0;
     float e_ant = 0;
     float y_ant = 0;
     float usat = 0;
-    float des_brightness;
     float Windup(float u);
 
     void NodeSetup();
@@ -80,7 +76,6 @@ class Node : public Comm_I2C {
     void initConsensus();
 
     void set_occupancy();
-    void button();
     void SendInfo(int counter);
 
     void Read_serial(char v_read);

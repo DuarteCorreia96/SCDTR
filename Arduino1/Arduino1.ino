@@ -21,6 +21,13 @@ int c = 1;
 
 Node *n1_p;
 
+void dataLogger() {
+  if (Serial.available() > 0){
+    v_read = Serial.read();
+    changeRef = true;
+  }
+}
+
 void setup() {
 
   addr = EEPROM.read(0);
@@ -36,7 +43,7 @@ void setup() {
   TCCR2B = (TCCR2B & mask) | prescale; // Changing frequency of timer2
 
   n1_p->sayHi(); // Broadcast an "Hello World"
-  Serial.begin(9600); 
+  Serial.begin(38400); 
   Serial.println("<Ready>");
     
   n1_p->findNodes();
@@ -63,6 +70,8 @@ void setup() {
       sendInfo = false;
     }*/
 
+    dataLogger();
+
     // Change Occupancy through Serial Comm
     if (changeRef) {
       n1_p->Read_serial(v_read);
@@ -71,11 +80,6 @@ void setup() {
     }
   }
 
-}
-
-void serialEvent() {
-  changeRef = true;
-  v_read = Serial.read();
 }
 
 void loop() {}

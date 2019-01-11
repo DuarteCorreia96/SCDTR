@@ -6,7 +6,6 @@ Node::Node(const float _m, const float _b, int _addr, float _c, float _rho) {
   m = _m;
   b = _b;
   c = _c;
-  Lcon = L;
   rho = _rho;
   o = 0;
   iter = 1;
@@ -236,9 +235,13 @@ void Node::sendCopy() {
 
 void Node::initConsensus() {
 
+  Serial.println('A');
+
   consensusCheck = false;
   restartConsensus = false;
   iter_consensus = 1;
+
+  o = extIlluminance();
   
   for(int j = 0; j < ndev; j++){
     y[j] = 0; 
@@ -248,19 +251,17 @@ void Node::initConsensus() {
     z[j] = 0;
     consensus_data[j] = "";
   }
-
-  o = extIlluminance();
+  
 }
 
 void Node::consensusAlgorithm() {
 
   all_copies = false;
 
-  if(restartConsensus)  initConsensus();
+  if(restartConsensus && consensusCheck)  initConsensus();
 
   if(abs(o - extIlluminance()) > 10 && consensusCheck){
-    //Serial.println("Here");
-    msgBroadcast('a',""); // Tell other nodes to run Consensus again
+    msgBroadcast('k',""); // Tell other nodes to run Consensus again
     initConsensus();
   }
 
@@ -352,17 +353,19 @@ void Node::consensusAlgorithm() {
   L_ref = k[addr-1]*d_avg[addr-1];
 
   if(iter_consensus == 20){
-    L_desk = k[0] * d_best[0] + k[1] * d_out[1] + o;
+
+    L_desk = 0;
+    for(j = 0; j < ndev; j++) L_desk += k[j]*d_avg[j];
+    
     Serial.println(readIlluminance());
     Serial.println(L_desk);
-    Serial.println(d_best[0]);
-    Serial.println(d_best[1]);
+    Serial.println(L_ref);
+    //Serial.println(d_best[0]);
+    //Serial.println(d_best[1]);
   }
 
   ++iter_consensus;
 
-  /*unsigned long finish = micros() - init;
-  Serial.println(finish);*/
 }
 
 float Node::Windup(float u) {
@@ -383,13 +386,13 @@ void Node::PID() {
 
   float y = readIlluminance();
   float e = L_ref - y;           // error in LUX
-  float p = k1 * e;                       // porpotional term
-  float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(usat);    // integal term
-  //float i = i_ant + (e    + e_ant);     // integal term
-  if (abs(e) < 0.5)
+  float p = k1 * e;                       // proportional term
+  float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(usat);    // integal term (w/ anti-windup)
+
+  if (abs(e) < 0.5) // Deadzone
     p = 0;
 
-  float u = p + i + des_brightness / k[addr-1];     // add feed-forward term
+  float u = p + i + L_ref / k[addr-1];     // add feed-forward term
 
   u = constrain(u, 0, 100);
   usat = u;
@@ -400,11 +403,11 @@ void Node::PID() {
 }
 
 void Node::Read_serial(char v_read) {
-  
-  if (v_read == 'o') {
+
+  if (v_read == 'o' && consensusCheck) {
     Occup = !Occup;
     set_occupancy();
-    msgBroadcast('a',""); // Tell other nodes to run Consensus again
+    msgBroadcast('k',""); // Tell other nodes to run Consensus again
     initConsensus();
   }
 }
