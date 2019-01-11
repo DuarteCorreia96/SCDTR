@@ -1,16 +1,8 @@
 #include "Comm_I2C.h"
 
-volatile bool Comm_I2C::sync;
-int Comm_I2C::ndev = 1;
-int Comm_I2C::consensus_cnt = 0;
-
 Comm_I2C::Comm_I2C(int _addr) {
   addr = _addr;
 }
-
-/*void Comm_I2C::getOtherU(float _u2) {
-  u2 = _u2;
-}*/
 
 void Comm_I2C::msgAnalyse(char id, int src, String data_str) {
 
@@ -18,9 +10,7 @@ void Comm_I2C::msgAnalyse(char id, int src, String data_str) {
 
   switch (id) {
     case 'c':
-      //Serial.println(consensus_cnt);
       consensus_data[consensus_cnt] = data_str;
-      //Serial.println(consensus_data[consensus_cnt]);
       ++consensus_cnt;      
       if(consensus_cnt == ndev-1){ // Copies of d vector from all other nodes received
         all_copies = true;
@@ -37,12 +27,7 @@ void Comm_I2C::msgAnalyse(char id, int src, String data_str) {
       break;
 
     case 'a':
-      /*d_ext[src-1] = atof(data_str.c_str());
-      ++consensus_cnt;
-      if(consensus_cnt == ndev-1) {
-        calc_ext_ill = true;
-        consensus_cnt = 0;
-      }*/
+      restartConsensus = true;
       break;
 
     default:
@@ -63,18 +48,17 @@ int Comm_I2C::msgSend(char id, int dest_addr, String data_str) {
 
 void Comm_I2C::msgBroadcast(char id, String data_str) {
 
-  /*Wire.beginTransmission(RASP_ADDR);
-  Wire.write(id);
-  Wire.write(' ');
-  Wire.write(addr + 48);
-  Wire.write(data_str.c_str());*/
-
   msgSend(id, BROADCAST_ADDR, data_str);
 
-  //return Wire.endTransmission(); // Returns 0 if the msg was sent successfully
 }
 
 void Comm_I2C::sayHi(){
+
+  // Initialise some variables
+  consensus_cnt = 0;
+  ndev = 1;
+  sync = false;
+  hello_flag = false;
 
   msgBroadcast('h',"");
       
@@ -88,22 +72,11 @@ void Comm_I2C::sayHi(){
   
 }
 
-
-
 void Comm_I2C::findNodes(){
 
   int _ndev = 0;
   int error;
   
-  /*unsigned long init = micros();
-  while(micros() - init < 5000000){
-    if(hello_flag){
-      hello_flag = false;
-      _ndev++;
-      //init = micros();
-    }  
-  }*/
-
   for(int address = 1; address < MAX_LUM; address++){
 
     if(address == addr)  continue;
@@ -121,7 +94,7 @@ void Comm_I2C::findNodes(){
   }
 
   ndev = _ndev + 1;
-  Serial.println("Search complete");
+  Serial.println('C');
 }
 
 int Comm_I2C::getAddr() const {
@@ -129,33 +102,18 @@ int Comm_I2C::getAddr() const {
   return addr;
 }
 
-/*void Comm_I2C::msgSyncCallback(int num) {
-  if(Wire.available() > 0){
-      //char c = Wire.read();
-      if(Wire.read() == 'a'){
-        //Serial.write(c);
-        sync = true;
-      }
-    }
-}*/
-
 void Comm_I2C::msgSync(int addr) {
 
   sync = false;
 
   while (!sync) {
-    //Serial.println(sync);
-    //Wire.onReceive(msgSyncCallback);
     delayMicroseconds(2000);
-    //Serial.println(sync);
     Wire.beginTransmission(addr);
     Wire.write('a');
     Wire.endTransmission();
   }
 
   sync = false;
-
-  //Serial.println("Sync!");
   delayMicroseconds(2000);
 }
 

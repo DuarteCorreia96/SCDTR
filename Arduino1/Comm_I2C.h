@@ -3,35 +3,31 @@
 
 #include <Wire.h>
 #include <Arduino.h>
-//#include "Vector.h"
-#define BROADCAST_ADDR 0
-//#define RASP_ADDR 4
-//#define OTHER_ADDR 2
 
-#define MAX_LUM 5 // Choose max number of luminaries accordingly!!
+#define BROADCAST_ADDR 0
+#define RASP_ADDR 127
+#define MAX_LUM 4
 
 class Comm_I2C {
 
   private:
-
-    //static void msgSyncCallback(int);
-    static int consensus_cnt;
+    
+    int consensus_cnt;
 
   protected:
-    //float u2 = 0;
     uint8_t addr;
-    static int ndev;
-    String floatToString(float num);
-    //Vector<String> consensus_data;
+    int ndev;
     String consensus_data[MAX_LUM-1];
+
+    String floatToString(float num);
+
+    volatile bool hello_flag;
+    volatile bool restartConsensus;
     volatile bool calib_flag;
     volatile bool all_copies;
-    volatile bool calc_ext_ill = false;
-    float d_ext[MAX_LUM];
 
   public:
 
-    bool consensus_flag;
     Comm_I2C() {};
     Comm_I2C(int addr);
     //~Comm_I2C();
@@ -42,12 +38,9 @@ class Comm_I2C {
     void msgSync(int addr);
     void findNodes();
     void sayHi();
-    //void getOtherU(float _u2);
     
-
     // Flags
-    volatile static bool sync;
-    volatile bool hello_flag = false;
+    volatile bool sync;
 };
 
 #endif
