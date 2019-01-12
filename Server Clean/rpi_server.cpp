@@ -32,6 +32,10 @@ void print_f();
 
 int main(){
 
+  std::cout << "size data_storage:   \t" << sizeof(data_storage) << std::endl;
+  std::cout << "size tcp_connection: \t" << sizeof(tcp_connection) << std::endl;
+  std::cout << "size tcp_server:     \t" << sizeof(tcp_server) << std::endl;
+
   //std::thread threadwrite(read_I2C);
   std::thread thread_server(server_f);
   std::thread thread_print(print_f);
@@ -43,6 +47,7 @@ int main(){
   thread_print.join();
   thread_input.join();
   thread_generate.join();
+
 }
 
 void read_I2C(){

@@ -12,6 +12,8 @@ void data_storage::init_variables(){
     buff[i].duty_cycle.clear();
     buff[i].illum.set_capacity(1028);
     buff[i].duty_cycle.set_capacity(1028);
+    buff[i].illum_size = 0;
+    buff[i].duty_size = 0;
   }
 }
 
@@ -23,6 +25,8 @@ void data_storage::insert_duty(float pwm, int node){
 
   buff[node].duty_cycle.push_front(duty);
   update_after_duty(node);
+  buff[node].duty_size++;
+  new_dval[node] = true;
 }
 
 void data_storage::insert_illu(float illu, int node){
@@ -33,6 +37,8 @@ void data_storage::insert_illu(float illu, int node){
 
   buff[node].illum.push_front(illuminance);
   update_after_illum(node);
+  buff[node].illum_size++;
+  new_lval[node] = true;
 }
 
 void data_storage::update_after_duty(int node){

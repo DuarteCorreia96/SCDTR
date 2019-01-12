@@ -7,7 +7,7 @@
 #include <ctime>
 #include <mutex>
 
-#define NODES 3
+#define NODES 127
 class data_storage{
 
 private:
@@ -21,6 +21,9 @@ private:
 
     boost::circular_buffer<struct Info> illum;      // for illuminance values
     boost::circular_buffer<struct Info> duty_cycle; // for duty cycle values
+
+    int illum_size;
+    int duty_size;
   };
 
 public:
@@ -47,10 +50,8 @@ public:
   std::string k;
 
   // Flags used for stream
-  bool lflags[NODES];
-  bool dflags[NODES];  
-  bool new_lval[NODES];
-  bool new_dval[NODES];
+  bool new_lval[NODES] = {0};
+  bool new_dval[NODES] = {0};
 };
 
 #endif

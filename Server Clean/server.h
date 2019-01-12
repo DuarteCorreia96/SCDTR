@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio.hpp>
 #include "data_storage.h"
 
@@ -50,12 +51,15 @@ private:
   void handle_write(const boost::system::error_code &error){
     if (!error) start();
   }
+  //void handle_stream(const boost::system::error_code &error);
 
   std::shared_ptr<data_storage> db;
   tcp::socket socket_;
   std::string message_;
-  enum {max_length = 1024};
+  enum {max_length = 127};
   char request_[max_length];
+/*   bool dflags[NODES] = {0};
+  bool lflags[NODES] = {0}; */
 };
 
 class tcp_server {
