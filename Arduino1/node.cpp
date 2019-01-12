@@ -372,11 +372,10 @@ void Node::PID() {
 
   float y = readIlluminance();
   float e = L_ref - y;           // error in LUX
-  float p = k1 * e;                       // proportional term
-  float i = i_ant + k2 * (e + e_ant);    // integal term (w/ anti-windup)
-
   if (abs(e) < 2) // Deadzone
     e = 0;
+  float p = k1 * e;                       // proportional term
+  float i = i_ant + k2 * (e + e_ant);    // integal term (w/ anti-windup)
 
   float u = (p + i + L_ref) / k[addr-1];     // add feed-forward term
 
