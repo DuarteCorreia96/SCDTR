@@ -36,17 +36,17 @@ int main(){
   std::cout << "size tcp_connection: \t" << sizeof(tcp_connection) << std::endl;
   std::cout << "size tcp_server:     \t" << sizeof(tcp_server) << std::endl;
 
-  //std::thread threadwrite(read_I2C);
+  std::thread threadwrite(read_I2C);
   std::thread thread_server(server_f);
   std::thread thread_print(print_f);
   std::thread thread_input(command);
-  std::thread thread_generate(thread_teste);
+  //std::thread thread_generate(thread_teste);
 
-  //threadwrite.join();
+  threadwrite.join();
   thread_server.join();
   thread_print.join();
   thread_input.join();
-  thread_generate.join();
+  //thread_generate.join();
 
 }
 
