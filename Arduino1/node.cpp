@@ -62,8 +62,9 @@ float Node::extIlluminance() {
 
 
 void Node::setLux(float _L) {
-  L = _L;
-  //Serial.println(_L);
+  
+  L = _L; // value for Consensus
+  L_ref = L; // value for the feedback controller
 }
 
 void Node::NodeSetup(){
@@ -350,18 +351,17 @@ void Node::consensusAlgorithm() {
     y[j] += rho*(d_best[j] - d_avg[j]); // Dual update -> Update the Lagrangian Multipliers
   }
 
-  L_ref = k[addr-1]*d_avg[addr-1];
+  //Serial.println(d_avg[addr-1]);
 
   if(iter_consensus == 20){
 
     L_desk = 0;
     for(j = 0; j < ndev; j++) L_desk += k[j]*d_avg[j];
     
-    Serial.println(readIlluminance());
     Serial.println(L_desk);
-    Serial.println(L_ref);
-    //Serial.println(d_best[0]);
-    //Serial.println(d_best[1]);
+    Serial.println(d_avg[addr-1]);
+    delay(100);
+    Serial.println(readIlluminance());
   }
 
   ++iter_consensus;
@@ -372,12 +372,18 @@ void Node::PID() {
 
   float y = readIlluminance();
   float e = L_ref - y;           // error in LUX
-  if (abs(e) < 2) // Deadzone
+
+  if (abs(e) < 0.5) // Deadzone
     e = 0;
+    
   float p = k1 * e;                       // proportional term
   float i = i_ant + k2 * (e + e_ant);    // integal term (w/ anti-windup)
 
-  float u = (p + i + L_ref) / k[addr-1];     // add feed-forward term
+  float uff = L_ref / k[addr-1];
+  if (iter_consensus > 5)
+    uff = d_avg[addr-1];
+  
+  float u = (p + i)/ k[addr-1] + uff;     // add feed-forward term (from Consensus)
 
   u = constrain(u, 0, 100);
   setPWM(map(u, 0, 100, 0, 255));
@@ -405,7 +411,7 @@ void Node::set_occupancy() {
     //Serial.println("Lux set to Upper Bound");
   }
   else {
-    setLux(LOWB); //Set desired illuminance to 50 lux
+    setLux(LOWB); //Set desired illuminance to 75 lux
     //Serial.println("Lux set to Lower Bound");
   }
 }
