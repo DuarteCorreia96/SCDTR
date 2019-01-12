@@ -368,35 +368,22 @@ void Node::consensusAlgorithm() {
 
 }
 
-float Node::Windup(float u) {
-
-  int wdp = 0;
-
-  if (u > 100)
-    wdp = 100 - u;
-  else if (u < 0)
-    wdp = -u;
-  else
-    wdp = 0;
-
-  return wdp;
-}
-
 void Node::PID() {
 
   float y = readIlluminance();
   float e = L_ref - y;           // error in LUX
   float p = k1 * e;                       // proportional term
-  float i = i_ant + k2 * (e + e_ant) + kwdp * Windup(usat);    // integal term (w/ anti-windup)
+  float i = i_ant + k2 * (e + e_ant);    // integal term (w/ anti-windup)
 
-  if (abs(e) < 0.5) // Deadzone
-    p = 0;
+  if (abs(e) < 2) // Deadzone
+    e = 0;
 
-  float u = p + i + L_ref / k[addr-1];     // add feed-forward term
+  float u = (p + i + L_ref) / k[addr-1];     // add feed-forward term
 
   u = constrain(u, 0, 100);
-  usat = u;
   setPWM(map(u, 0, 100, 0, 255));
+  if((u == 255) || (u == 0))  i = i_ant; // Anti-windup (do not update controller)
+
   i_ant = i;
   e_ant = e;
   y_ant = y;

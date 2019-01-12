@@ -35,12 +35,9 @@ class Node : public Comm_I2C {
     void sendCopy();
     const float k1 = 0.01575;
     const float k2 = 0.00945;
-    const float kwdp = 0.034;
     float i_ant = 0;
     float e_ant = 0;
     float y_ant = 0;
-    float usat = 0;
-    float Windup(float u);
 
     void NodeSetup();
 
